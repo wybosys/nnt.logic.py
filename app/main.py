@@ -10,6 +10,6 @@ def launch():
     app.entryDir = "~/"
     app.assetDir = "~/assets/"
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop()    
     loop.run_until_complete(app.start())
     loop.close()    
