@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import os, urllib
-from nnt.core.python import *
-import nnt.core.logger as logger
+from .python import *
+from . import logger
 
 # 当前运行的目录
 ROOT = os.path.expanduser('/')
