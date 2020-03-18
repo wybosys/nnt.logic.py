@@ -1,10 +1,9 @@
 # -*- coding:utf-8 -*-
 
 import os, json, shutil, sys
-from ..core import signals as ss, logger
-from ..core.url import *
-from . import config, assets, loggers, dbmss, servers, containers
 from ..core.python import *
+from ..core import signals as ss, logger, url
+from . import config, assets, loggers, dbmss, servers, containers
 
 kSignalAppStarted = '::nn::app::started'
 kSignalAppStopped = '::nn::app::stopped'
@@ -41,9 +40,9 @@ class App(ss.SObject):
     @staticmethod
     def LoadConfig(appcfg = "~/app.json", devcfg = "~/devops.json"):
         """加载程序配置"""
-        appcfg = expand(appcfg)
+        appcfg = url.expand(appcfg)
         if devcfg:
-            devcfg = expand(devcfg)
+            devcfg = url.expand(devcfg)
 
         # 读取配置信息
         if not os.path.exists(appcfg):
@@ -112,7 +111,7 @@ class App(ss.SObject):
         if 'cidexpire' in c:
             config.CID_EXPIRE = c['cidexpire']
         if 'cache' in c:
-            config.CACHE = expand(c['cache'])
+            config.CACHE = url.expand(c['cache'])
         if 'https' in c:
             config.HTTPS = c['https']
         if 'http2' in c:
@@ -152,7 +151,7 @@ class App(ss.SObject):
 
     @entryDir.setter
     def entryDir(self, val):
-        self._entryDir = expand(val)
+        self._entryDir = url.expand(val)
 
     @property
     def assetDir(self):
@@ -161,7 +160,7 @@ class App(ss.SObject):
 
     @assetDir.setter
     def assetDir(self, val):
-        self._assetDir = expand(val)
+        self._assetDir = url.expand(val)
 
     async def start(self):
         # 设置资源管理器的目录
@@ -222,18 +221,18 @@ def RunHooks(step):
             e()
 
 # 处理entry的url转换
-RegisterScheme("entry",
+url.RegisterScheme("entry",
 lambda body:
     App.shared.entryDir + body
 )
 
 # 处理clientSDK的url转换
-RegisterScheme("sdk", 
+url.RegisterScheme("sdk", 
 lambda body:
     home() + "/src/" + body
 )
 
-RegisterScheme("cache", 
+url.RegisterScheme("cache", 
 lambda body:
     config.CACHE + "/" + body
 )
