@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-import os, json, shutil
+import os, json, shutil, sys
 import nnt.core.signals as ss
 from nnt.core.url import RegisterScheme, home, expand
 import nnt.manager.config as config
@@ -60,7 +60,7 @@ class App(ss.SObject):
         cfg = json.load(open(appcfg, 'r'))        
 
         # 处理输入参数
-        argv = os.argv
+        argv = sys.argv
 
         # 判断是否直接执行指定服务
         directserveridx = indexOf(argv, '--server')
