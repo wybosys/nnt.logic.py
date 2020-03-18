@@ -10,7 +10,6 @@ def toJson(o, default = None):
     except:
         r = default    
     return r
-}
 
 def toJsonObject(o, default = None):
     t = type (o)
