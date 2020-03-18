@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 
 import nnt.core.signals as ss
+from nnt.core.url import RegisterScheme, home
+import nnt.manager.config as config
 
 kSignalEventStarted = '::nn::app::started'
 kSignalEventStopped = '::nn::app::stopped'
@@ -40,3 +42,19 @@ def RunHooks(step):
         for e in arr:
             e()
 
+# 处理entry的url转换
+RegisterScheme("entry",
+lambda body:
+    App.shared.entryDir + body
+)
+
+# 处理clientSDK的url转换
+RegisterScheme("sdk", 
+lambda body:
+    home() + "/src/" + body
+)
+
+RegisterScheme("cache", 
+lambda body:
+    config.CACHE + "/" + body
+)
