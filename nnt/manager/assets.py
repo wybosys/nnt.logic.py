@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from nnt.core.url import RegisterScheme
+from ..core import url
 
 class TYPE:
     JSON = "json"
@@ -7,8 +7,7 @@ class TYPE:
 # 资源目录
 directory = None
 
-RegisterScheme("assets", 
+url.RegisterScheme("assets", 
 lambda body:
     directory + body
 )
-

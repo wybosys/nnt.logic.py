@@ -1,12 +1,10 @@
 # -*- coding:utf-8 -*-
 
 import os, json, shutil, sys
-import nnt.core.signals as ss
-from nnt.core.url import RegisterScheme, home, expand
-import nnt.manager.config as config
-from nnt.core.python import *
-import nnt.core.logger as logger
-import nnt.manager.assets as assets
+from ..core import signals as ss, logger
+from ..core.url import *
+from ..manager import config, assets
+from ..core.python import *
 
 kSignalAppStarted = '::nn::app::started'
 kSignalAppStopped = '::nn::app::stopped'
