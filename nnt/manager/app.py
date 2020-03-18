@@ -3,7 +3,7 @@
 import os, json, shutil, sys
 from ..core import signals as ss, logger
 from ..core.url import *
-from ..manager import config, assets
+from . import config, assets, loggers, dbmss, servers, containers
 from ..core.python import *
 
 kSignalAppStarted = '::nn::app::started'
@@ -169,16 +169,15 @@ class App(ss.SObject):
 
         cfg = App.CurrentConfig
         if 'logger' in cfg:
-            # await loggers.Start(cfg['logger']
-            pass
+            await loggers.Start(cfg['logger'])            
         if 'dbms' in cfg:
-            # await dbmss.Start(cfg.dbms);
+            await dbmss.Start(cfg.dbms);
             pass
         if 'server' in cfg:
-            # await servers.Start(cfg.server);
+            await servers.Start(cfg.server);
             pass
         if 'container' in cfg:
-            # await containers.Start(cfg.container);
+            await containers.Start(cfg.container);
             pass
 
         # 启动成功
@@ -186,10 +185,10 @@ class App(ss.SObject):
         self.signals.emit(kSignalAppStarted)
     
     async def stop(self):
-        #await servers.Stop();
-        #await dbmss.Stop();
-        #await loggers.Stop();
-        #await containers.Stop();
+        await servers.Stop();
+        await dbmss.Stop();
+        await loggers.Stop();
+        await containers.Stop();
 
         RunHooks(STOPPED);
         self.signals.emit(App.EVENT_STOP)    
