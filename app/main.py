@@ -6,8 +6,7 @@ import asyncio
 def launch():
     App.LoadConfig()
 
-    app = App()
-    app.entryDir = "~/"
+    app = App()    
     app.assetDir = "~/assets/"
 
     loop = asyncio.get_event_loop()    

@@ -72,7 +72,7 @@ async def Start(cfg):
             if 'entry' not in e:
                 continue
 
-            t = App.shared().instanceEntry(e['entry'])
+            t = App.shared().instanceEntry(e['entry'])            
             if not t:
                 continue
 

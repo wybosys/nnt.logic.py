@@ -11,10 +11,7 @@ class App(app.App):
     CurrentConfig = None
 
     def __init__(self):
-        super().__init__()
-        
-         # entry位于的目录
-        self._entryDir = ""
+        super().__init__()                 
 
         # 资源目录
         self._assetDir = ""
@@ -127,16 +124,7 @@ class App(app.App):
         if not os.path.exists(config.CACHE):
             shutil.os.makedirs(config.CACHE)       
 
-        return cfg    
-
-    @property
-    def entryDir(self):
-        """entry位于的目录"""
-        return self._entryDir
-
-    @entryDir.setter
-    def entryDir(self, val):
-        self._entryDir = url.expand(val)
+        return cfg
 
     @property
     def assetDir(self):
@@ -175,12 +163,6 @@ class App(app.App):
         RunHooks(STOPPED);
         
         return super().stop()
-
-    def instanceEntry(self, entry):
-        return None
-
-    def containsEntry(self, entry):
-        return False
 
 # 用于挂住系统进程的钩子
 BOOT = 'boot'

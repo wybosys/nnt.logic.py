@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-
+import importlib
 from . import signals as ss
 
 kSignalAppStarted = '::nn::app::started'
@@ -26,7 +26,23 @@ class App(ss.SObject):
         self.signals.emit(kSignalAppStopped)
 
     def instanceEntry(self, entry):
+        # 形式为 xx.xx.Xxxx 约定全小写为包文件目录，最后一个为类名
+        pack = entry.lower()
+        try:
+            mod = importlib.import_module(pack)
+            _,_, clazz = entry.rpartition('.')
+            func = getattr(mod, clazz)
+            return func()
+        except:
+            print("没有找到实体 %s" % entry)
         return None
 
     def containsEntry(self, entry):
+        pack = entry.lower()
+        try:
+            mod = importlib.import_module(pack)
+            _,_, clazz = entry.rpartition('.')
+            return hasattr(mod, clazz)
+        except:
+            pass
         return False
