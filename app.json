@@ -1,6 +1,128 @@
 {
-    "config": {},
-    "server": [
-
-    ]
+    "config": {
+        "sidexpire": 86400,
+        "cidexpire": 600,
+        "cache": "cache",
+        "https": false,
+        "deskey": "joi>:90",
+        "cluster": 1
+    },
+    "server": [{
+            "id": "sample",
+            "listen": "*",
+            "port": 8090,
+            "entry": "app.SampleRest",
+            "enable": "local",
+            "router": {
+                "nnt.server.apidoc.Router": {
+                    "export": {
+                        "router": [
+                            "entry://app/router/sample"
+                        ],
+                        "model": [
+                            "entry://nnt/core/models",
+                            "entry://app/model/sample"
+                        ]
+                    }
+                },
+                "nnt.thirds.rmq.RAdmin": {
+                    "host": "develop.91egame.com",
+                    "user": "root",
+                    "password": "root"
+                }
+            }
+        },
+        {
+            "id": "sample",
+            "listen": "*",
+            "port": 80,
+            "entry": "app.SampleRest",
+            "enable": "devops-develop,devops-release"
+        },
+        {
+            "id": "mmo",
+            "attach": "sample",
+            "entry": "app.SampleMmo",
+            "mqsrv": "amqp"
+        },
+        {
+            "id": "gendata",
+            "entry": "nnt.server.XlsxConfig",
+            "dir": "~/src/app/data",
+            "output": "~/src/app/data/data.ts",
+            "enable": null
+        },
+        {
+            "id": "amqp",
+            "host": "develop.91egame.com",
+            "vhost": "sample",
+            "user": "sample",
+            "password": "sample",
+            "entry": "nnt.server.Amqpmq",
+            "channel": {
+                "users.online": {
+                    "type": "fanout",
+                    "durable": false,
+                    "longliving": true
+                }
+            },
+            "enable": "debug"
+        },
+        {
+            "id": "amqp",
+            "host": "rabbitmq",
+            "vhost": "sample",
+            "user": "sample",
+            "password": "sample",
+            "entry": "nnt.server.Amqpmq",
+            "channel": {
+                "users.online": {
+                    "type": "fanout",
+                    "durable": false,
+                    "longliving": true
+                }
+            },
+            "enable": "distribution"
+        },
+        {
+            "id": "media",
+            "host": "http://localhost:8090/",
+            "entry": "nnt.server.Remote",
+            "enable": "local"
+        },
+        {
+            "id": "logic",
+            "host": "http://localhost:8090/",
+            "entry": "nnt.server.Logic",
+            "enable": "local"
+        },
+        {
+            "id": "sdk",
+            "entry": "nnt.thirds.sdks.Sdks",
+            "attach": "sample",
+            "gameid": 100,
+            "gamekey": "DBoNIGpU",
+            "debug": "true",
+            "enable": "local"
+        },
+        {
+            "id": "sdk",
+            "entry": "nnt.thirds.sdks.Sdks",
+            "gameid": 100,
+            "gamekey": "DBoNIGpU",
+            "debug": "true",
+            "enable": "distribution"
+        }
+    ],
+    "dbms": [{
+        "id": "localdb",
+        "entry": "nnt.store.KvLevel",
+        "file": "cache://nnt.logic.sample.localdb"
+    }],
+    "logger": [{
+        "id": "console",
+        "filter": "all",
+        "entry": "nnt.logger.Console",
+        "enable": "local"
+    }]
 }
