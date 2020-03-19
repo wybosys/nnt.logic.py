@@ -170,14 +170,11 @@ class App(ss.SObject):
         if 'logger' in cfg:
             await loggers.Start(cfg['logger'])            
         if 'dbms' in cfg:
-            await dbmss.Start(cfg.dbms);
-            pass
+            await dbmss.Start(cfg.dbms);            
         if 'server' in cfg:
-            await servers.Start(cfg.server);
-            pass
+            await servers.Start(cfg.server);            
         if 'container' in cfg:
-            await containers.Start(cfg.container);
-            pass
+            await containers.Start(cfg.container);            
 
         # 启动成功
         RunHooks(STARTED)
