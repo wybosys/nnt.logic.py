@@ -2,22 +2,13 @@
 
 import os, json, shutil, sys
 from ..core.python import *
-from ..core import signals as ss, logger, url
+from ..core import logger, url, app
 from . import config, assets, loggers, dbmss, servers, containers
 
-kSignalAppStarted = '::nn::app::started'
-kSignalAppStopped = '::nn::app::stopped'
-
-class App(ss.SObject):
-
-    _shared = None
+class App(app.App):
 
     # 当前配置信息
     CurrentConfig = None
-
-    @property
-    def shared():
-        return App._shared
 
     def __init__(self):
         super().__init__()
@@ -28,14 +19,8 @@ class App(ss.SObject):
         # 资源目录
         self._assetDir = ""
 
-        # 绑定单件
-        App._shared = self
-
         # 调用注册的全局事件
         RunHooks(BOOT)
-
-        self.signals.register(kSignalAppStarted)
-        self.signals.register(kSignalAppStopped)
 
     @staticmethod
     def LoadConfig(appcfg = "~/app.json", devcfg = "~/devops.json"):
@@ -178,7 +163,8 @@ class App(ss.SObject):
 
         # 启动成功
         RunHooks(STARTED)
-        self.signals.emit(kSignalAppStarted)
+        
+        return super().start()
     
     async def stop(self):
         await servers.Stop();
@@ -187,7 +173,8 @@ class App(ss.SObject):
         await containers.Stop();
 
         RunHooks(STOPPED);
-        self.signals.emit(App.EVENT_STOP)    
+        
+        return super().stop()
 
     def instanceEntry(self, entry):
         return None
@@ -226,7 +213,7 @@ lambda body:
 # 处理clientSDK的url转换
 url.RegisterScheme("sdk", 
 lambda body:
-    home() + "/src/" + body
+    url.home() + "/src/" + body
 )
 
 url.RegisterScheme("cache", 

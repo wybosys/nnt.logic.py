@@ -2,8 +2,8 @@
 
 from ..core import logger
 from ..logger.logger import Filter
-from ..config import *
-from ..manager.app import App
+from ..config.config import NodeIsEnable
+from ..core.app import App
 from ..manager import config
 
 _loggers = []
@@ -66,13 +66,13 @@ logger.exception = _
 
 async def Start(cfg):
     if len(cfg):
-        for e in cfg:
-            if not config.NodeIsEnable(e):
+        for e in cfg:            
+            if not NodeIsEnable(e):
                 continue
             if 'entry' not in e:
                 continue
 
-            t = App.shared.instance(e['entry'])
+            t = App.shared().instanceEntry(e['entry'])
             if not t:
                 continue
 
@@ -86,7 +86,7 @@ async def Start(cfg):
 
         # 额外如果位于devops环境中，需要自动初始化devops的日志
         if config.DEVOPS:
-            t = App.shared.instanceEntry("nnt.logger.Log4devops")
+            t = App.shared().instanceEntry("nnt.logger.Log4devops")
             t.config({
                 'id': "devops-logs",
                 'filter': "all"
