@@ -154,29 +154,23 @@ class Routers:
 
         # 和php等一样的规则
         if config.DEVOPS_DEVELOP:            
-            skip = at(trans.params, devops.permissions.KEY_SKIPPERMISSION)
+            skip = at(trans.params, devops.KEY_SKIPPERMISSION)
             if skip:
                 return True        
 
         clientip = trans.info.addr
-        if (!Permissions.allowClient(clientip)) {
+        if not devops.Permissions.allowClient(clientip):
             logger.log("设置为禁止 " + clientip + " 访问服务")
-            return false
-        }
+            return False        
 
-        let permid = trans.params[KEY_PERMISSIONID]
-        if (!permid) {
+        permid = at(trans.params, devops.KEY_PERMISSIONID)
+        if not permid:
             logger.log("调用接口没有传递 permissionid")
-            return false
-        }
+            return False        
 
-        let cfg = await Permissions.locate(permid)
-        if (cfg == null) {
+        cfg = await devops.Permissions.locate(permid)
+        if not cfg:
             logger.log("permission验证失败")
-            return false
-        }
+            return False
 
-        return true
-    }
-}
-
+        return True
