@@ -5,50 +5,26 @@ class EchoType:
 @model()
 class Echoo:
 
-    @string(1, [input], "输入")
-    input: string;
+    input = string(1, [input], "输入")
+    output = string(2, [output], "输出")    
+    time = integer(3, [output], "服务器时间")    
+    json = json(4, [output])    
+    map = map(5, string_t, integer_t, [output])
+    array = (6, double_t, [output])
+    enm = enumerate(7, EchoType, [output])    
+    nullval = type(8, Null, [output])
 
-    @string(2, [output], "输出")
-    output: string;
-
-    @integer(3, [output], "服务器时间")
-    time: number;
-
-    @json(4, [output])
-    json: IndexedObject;
-
-    @map(5, string_t, integer_t, [output])
-    map = new Map<string, number>();
-
-    @array(6, double_t, [output])
-    array = new Array<number>();
-
-    @enumerate(7, EchoType, [output])
-    enm = EchoType.TEST;
-
-    @type(8, Null, [output])
-    nullval: Null;
+    def __init__(self):
+        self.enm = EchoType.TEST
 
 @model()
 @table("localdb", "user")
 class Login:
 
-    @string(1, [input], "随便输入一个用户id")
-    @colstring()
-    uid: string;
-
-    @string(2, [output])
-    @colstring()
-    sid: string;
-
-    @string(3, [input, optional], "sdk返回的数据")
-    @colstring()
-    raw: string;
-
-    @string(4, [input, optional], "渠道")
-    @colstring()
-    channel: string;
-}
+    uid = (string(1, [input], "随便输入一个用户id"), colstring())
+    sid = (string(2, [output]), colstring())    
+    raw = (string(3, [input, optional], "sdk返回的数据"), colstring())    
+    channel = (string(4, [input, optional], "渠道"), colstring())
 
 @model([auth])
 class User:

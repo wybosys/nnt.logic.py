@@ -288,17 +288,13 @@ class Transaction:
     }
 }
 
-export class EmptyTransaction extends Transaction {
+class EmptyTransaction(Transaction):
 
-    waitTimeout() {
-        // pass
-    }
+    def waitTimeout(self):
+        pass    
 
-    sessionId(): string {
-        return null
-    }
+    def sessionId(self) -> string:
+        return None    
 
-    auth(): boolean {
-        return false
-    }
-}
+    def auth(self) -> bool:
+        return False
