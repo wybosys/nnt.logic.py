@@ -7,5 +7,13 @@ def at(any, idx, default = None):
     try:
         return any[idx]
     except:
-        return default
+        try:
+            return getattr(any, idx)
+        except:
+            return default        
         
+def delete(any, idx):
+    try:
+        del any[idx]
+    except:
+        pass

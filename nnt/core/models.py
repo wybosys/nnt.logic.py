@@ -1,3 +1,10 @@
+class ModelError(Exception):
+
+    def __init__(self, code = 0, msg = None):
+        super().__init__()
+        self.code = code
+        self.msg = msg
+
 PAGED_LIMIT = 5000
 
 class STATUS:
