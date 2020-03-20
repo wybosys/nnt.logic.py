@@ -1,74 +1,67 @@
-@model([enumm])
-class EchoType:
-    TEST = 88 
+import nnt.core.proto as cp
+import nnt.store.proto as sp
 
-@model()
+
+@cp.model([cp.enum])
+class EchoType:
+    TEST = 88
+
+
+@cp.model()
 class Echoo:
 
-    input = string(1, [input], "输入")
-    output = string(2, [output], "输出")    
-    time = integer(3, [output], "服务器时间")    
-    json = json(4, [output])    
-    map = map(5, string_t, integer_t, [output])
-    array = (6, double_t, [output])
-    enm = enumerate(7, EchoType, [output])    
-    nullval = type(8, Null, [output])
+    input = cp.string(1, [cp.input], "输入")
+    output = cp.string(2, [cp.output], "输出")
+    time = cp.integer(3, [cp.output], "服务器时间")
+    json = cp.json(4, [cp.output])
+    map = cp.map(5, cp.cp.string_t, cp.integer_t, [cp.output])
+    array = (6, cp.double_t, [cp.cp.output])
+    enm = cp.enumerate(7, EchoType, [cp.cp.output])
+    nullval = cp.typer(8, Null, [cp.output])
 
     def __init__(self):
         self.enm = EchoType.TEST
 
-@model()
-@table("localdb", "user")
+
+@cp.model()
+@sp.table("localdb", "user")
 class Login:
 
-    uid = (string(1, [input], "随便输入一个用户id"), colstring())
-    sid = (string(2, [output]), colstring())    
-    raw = (string(3, [input, optional], "sdk返回的数据"), colstring())    
-    channel = (string(4, [input, optional], "渠道"), colstring())
+    uid = (cp.string(1, [cp.input], "随便输入一个用户id"), sp.cp.string())
+    sid = (cp.string(2, [cp.output]), sp.cp.string())
+    raw = (cp.string(3, [cp.input, cp.optional], "sdk返回的数据"), sp.cp.string())
+    channel = (cp.string(4, [cp.input, cp.optional], "渠道"), sp.cp.string())
 
-@model([auth])
+
+@cp.model([cp.auth])
 class User:
 
-    @string(1, [output], "当前用户id")
-    uid: string;
-}
+    uid = cp.string(1, [cp.output], "当前用户id")
 
-@model()
+
+@cp.model()
 class LoginSDK:
 
-    @string(1, [input], "sdk返回的数据")
-    raw: string;
+    raw = cp.string(1, [cp.input], "sdk返回的数据")
+    channel = cp.string(2, [cp.input], "渠道")
+    user = cp.typer(3, User, [cp.output])
+    sid = cp.string(4, [cp.output])
 
-    @string(2, [input], "渠道")
-    channel: string;
 
-    @type(3, User, [output])
-    user: User;
-
-    @string(4, [output])
-    sid: string;
-}
-
-@model()
+@cp.model()
 class LoginVerifySDK:
 
-    @string(1, [input])
-    sid: string;
+    sid = cp.string(1, [cp.input])
+    user = cp.typer(2, User, [cp.output])
 
-    @type(2, User, [output])
-    user: User;
-}
 
-@model([auth])
+@cp.model([cp.auth])
 class Message:
 
-    @string(1, [output], "消息体")
-    content: string;
-}
+    content = cp.string(1, [cp.output], "消息体")
 
-@model([])
+
+@cp.model([])
 class Upload:
 
-    @file(1, [input, output], "选择一个图片")
-    file: FileType;
-}
+    file = cp.file(1, [cp.input, cp.output], "选择一个图片")
