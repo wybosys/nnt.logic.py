@@ -10,6 +10,7 @@ async def Start(cfg):
             if not NodeIsEnable(e):
                 continue
             if 'entry' not in e:
+                print('db没有配置entry节点')
                 continue
 
             t = app.App.shared().instanceEntry(e['entry'])            

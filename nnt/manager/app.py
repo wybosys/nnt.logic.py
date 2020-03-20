@@ -152,7 +152,7 @@ class App(app.App):
         # 启动成功
         RunHooks(STARTED)
         
-        return super().start()
+        await super().start()
     
     async def stop(self):
         await servers.Stop();
