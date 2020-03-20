@@ -29,9 +29,10 @@ class Attribute:
 
 def NodeIsEnable(node):
     """判断此Node节点是否可用"""
-    if not node['enable']:
+    if not at(node, 'enable'):
         return True
     conds = node['enable'].split(",")
+
     # 找到一个满足的即为满足
     for e in conds:
         if not e:

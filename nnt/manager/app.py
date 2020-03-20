@@ -143,11 +143,11 @@ class App(app.App):
         if 'logger' in cfg:
             await loggers.Start(cfg['logger'])            
         if 'dbms' in cfg:
-            await dbmss.Start(cfg.dbms);            
+            await dbmss.Start(cfg['dbms'])
         if 'server' in cfg:
-            await servers.Start(cfg.server);            
+            await servers.Start(cfg['server'])
         if 'container' in cfg:
-            await containers.Start(cfg.container);            
+            await containers.Start(cfg['container'])
 
         # 启动成功
         RunHooks(STARTED)
