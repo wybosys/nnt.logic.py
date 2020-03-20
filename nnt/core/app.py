@@ -32,8 +32,9 @@ class App(ss.SObject):
             _,_, clazz = entry.rpartition('.')
             func = getattr(mod, clazz)
             return func()
-        except:
-            print("没有找到实体 %s" % entry)
+        except Exception as err:
+            print("实例化失败 %s" % entry)
+            print(err)
         return None
 
     def containsEntry(self, entry):
