@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 class Level:
     SPECIAL = 9
     CUSTOM = 8

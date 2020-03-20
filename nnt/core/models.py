@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 PAGED_LIMIT = 5000
 
 class STATUS:

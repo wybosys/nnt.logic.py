@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 import re, sys
 from ..manager import config
 from ..core.python import *

@@ -1,6 +1,4 @@
-# -*- coding:utf-8 -*-
-
-from .store import AbstractDbms
+from .store import *
 
 class AbstractKv(AbstractDbms):
 

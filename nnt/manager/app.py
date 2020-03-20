@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 import os, json, shutil, sys
 from ..core.python import *
 from ..core import logger, url, app

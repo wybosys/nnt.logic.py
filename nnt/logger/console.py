@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 from .logger import AbstractLogger
 from ..manager import config
 

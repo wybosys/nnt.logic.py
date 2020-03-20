@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 from .logger import AbstractLogger
 from ..core.time import DateTime
 from ..core.models import STATUS

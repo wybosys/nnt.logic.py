@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 from ..core import logger
 from ..logger.logger import Filter
 from ..config.config import NodeIsEnable

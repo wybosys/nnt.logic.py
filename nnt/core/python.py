@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 # 扩展python基础函数
 
 def indexOf(lst, v):

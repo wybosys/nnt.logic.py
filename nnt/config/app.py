@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 class AppNodes:
 
     def __init__(self):

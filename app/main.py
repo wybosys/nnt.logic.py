@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 from nnt.manager.app import App
 import asyncio
 

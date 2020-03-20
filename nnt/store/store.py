@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 class AbstractDbms:
 
     def __init__(self):
@@ -10,7 +8,7 @@ class AbstractDbms:
 
     # 配置
     def config(self, cfg):
-        this.id = cfg['id']
+        self.id = cfg['id']
         return True
 
     # 打开连接
@@ -29,14 +27,14 @@ class AbstractDbms:
 # 数据库执行的情况
 class DbExecuteStat:
 
-    def __init__(self):
+    def __init__(self, insert=0, update=0, remove=0):
         super().__init__()
 
         # 增加行数
-        self.insert = 0
+        self.insert = insert
 
         # 修改行数
-        self.update = 0
+        self.update = update
 
         # 删除行数
-        self.remove = 0
+        self.remove = remove

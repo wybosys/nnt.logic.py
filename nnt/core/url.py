@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 import os, urllib
 from .python import *
 from . import logger

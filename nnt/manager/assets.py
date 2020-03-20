@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 from ..core import url
 
 class TYPE:
