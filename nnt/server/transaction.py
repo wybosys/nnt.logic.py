@@ -285,7 +285,7 @@ class EmptyTransaction(Transaction):
     def waitTimeout(self):
         pass
 
-    def sessionId(self) -> string:
+    def sessionId(self) -> str:
         return None
 
     def auth(self) -> bool:

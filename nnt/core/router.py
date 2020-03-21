@@ -89,7 +89,7 @@ def action(fun, model, options = None, comment = None):
         model[AP_KEY][fun.__name__] = ap   
     return model
 
-def FindAction(target, key: string) -> ActionProto:
+def FindAction(target, key: str) -> ActionProto:
     if hasattr(target.__class__, AP_KEY):
         return target.__class__[AP_KEY][key]
     return None

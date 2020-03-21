@@ -14,9 +14,9 @@ class Echoo:
     output = cp.string(2, [cp.output], "输出")
     time = cp.integer(3, [cp.output], "服务器时间")
     json = cp.json(4, [cp.output])
-    map = cp.map(5, cp.cp.string_t, cp.integer_t, [cp.output])
-    array = (6, cp.double_t, [cp.cp.output])
-    enm = cp.enumerate(7, EchoType, [cp.cp.output])
+    map = cp.map(5, cp.string_t, cp.integer_t, [cp.output])
+    array = (6, cp.double_t, [cp.output])
+    enm = cp.enumerate(7, EchoType, [cp.output])
     nullval = cp.typer(8, Null, [cp.output])
 
     def __init__(self):

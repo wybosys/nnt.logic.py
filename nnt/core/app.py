@@ -1,5 +1,5 @@
 import importlib
-from . import signals as ss
+from . import signals as ss, logger
 
 kSignalAppStarted = '::nn::app::started'
 kSignalAppStopped = '::nn::app::stopped'
@@ -33,8 +33,8 @@ class App(ss.SObject):
             func = getattr(mod, clazz)
             return func()
         except Exception as err:
-            print("实例化失败 %s" % entry)
-            print(err)
+            print("实例化失败 %s" % entry)            
+            logger.exception(err)            
         return None
 
     def containsEntry(self, entry):

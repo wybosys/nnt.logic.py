@@ -99,16 +99,18 @@ class FieldOption:
 MP_KEY = "__modelproto"
 
 
-def model(clazz, options=None, parent=None):
-    mp = ModelOption()
-    if options:
-        mp.auth = auth in options
-        mp.enum = enum in options
-        mp.constant = constant in options
-        mp.hidden = hidden in options
-    mp.parent = parent
-    setattr(clazz, MP_KEY, mp)
-    return clazz
+def model(options=None, parent=None):
+    def _(clazz):
+        mp = ModelOption()
+        if options:
+            mp.auth = auth in options
+            mp.enum = enum in options
+            mp.constant = constant in options
+            mp.hidden = hidden in options
+        mp.parent = parent    
+        setattr(clazz, MP_KEY, mp)
+        return clazz
+    return _
 
 
 def field(id, options, comment, valid) -> FieldOption:
