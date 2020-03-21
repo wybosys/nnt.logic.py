@@ -1,13 +1,18 @@
 from ..core.models import *
-from ..core import time
+from ..core import time, logger
 from ..core.python import *
+from ..core.router import FindAction
+from ..core.proto import IsNeedAuth
+from ..manager import config
 
 RESPONSE_SID = "X-NntLogic-SessionId"
+
 
 class DeviceType:
     UNKNOWN = 0
     IOS = 1
     ANDROID = 2
+
 
 class TransactionInfo:
 
@@ -15,8 +20,8 @@ class TransactionInfo:
         super().__init__()
 
         # 客户端代码
-        self.agent = None # 全小写
-        self.ua = None # 原始ua
+        self.agent = None  # 全小写
+        self.ua = None  # 原始ua
 
         # 访问的主机
         self.host = None
@@ -43,8 +48,9 @@ class TransactionInfo:
         elif 'android' in self.agent:
             self._deviceType = DeviceType.ANDROID
         else:
-            self._deviceType = DeviceType.UNKNOWN        
+            self._deviceType = DeviceType.UNKNOWN
         return self._deviceType
+
 
 class TransactionSubmitOption:
 
@@ -60,10 +66,11 @@ class TransactionSubmitOption:
         # 输出的类型
         self.type = None
 
+
 class Transaction:
 
     def __init__(self):
-        super().__init__()        
+        super().__init__()
 
         # 超时定时器
         self._timeout = None
@@ -127,6 +134,18 @@ class Transaction:
         # 执行权限
         self.ace = None
 
+        # 同步模式会自动提交，异步模式需要手动提交, (opt?: TransactionSubmitOption) => void
+        self.implSubmit = None
+        self._submited = False
+        self._submited_timeout = False
+
+        # 当提交的时候修改, () => Promise<void>
+        self.hookSubmit = None
+
+        # 输出文件 (type: string, obj: any) => void
+        self.implOutput = None
+        self._outputed = False
+
         # 默认启动超时处理
         self.waitTimeout()
 
@@ -136,20 +155,20 @@ class Transaction:
 
     def clientId(self):
         """获得同意个sid之下的客户端的id，和sid结合起来保证唯一性，即 sid.{cid}"""
-        return self.params["_cid"]    
+        return self.params["_cid"]
 
     def instance(self, cls):
         """带上此次请求事务的参数实例化一个模型,通常业务层中会对params增加一些数据，来满足trans对auth、context的需求，如果直接new对象的化，就没办法加入这些数据"""
-        return cls()    
+        return cls()
 
     def newOneClient(self):
         """是否是新连接上的客户端(包括客户端重启)"""
-        return at(self.params, "_noc") == "1"    
+        return at(self.params, "_noc") == "1"
 
-    @property        
+    @property
     def action(self):
         """动作"""
-        return self._action    
+        return self._action
 
     @action.setter
     def action(self, act):
@@ -160,141 +179,114 @@ class Transaction:
 
     def modelize(self, r):
         """恢复到model, 返回错误码"""
-        let ap = FindAction(r, self.call)
-        if (!ap)
+        ap = FindAction(r, self.call)
+        if not ap:
             return STATUS.ACTION_NOT_FOUND
         self.frqctl = ap.frqctl
         self.expose = ap.expose
 
-        let clz = ap.clazz
+        clz = ap.clazz
 
-        // 检查输入参数
-        let sta = self.parser.checkInput(clz.prototype, self.params)
-        if (sta != STATUS.OK)
+        # 检查输入参数
+        sta = self.parser.checkInput(clz.prototype, self.params)
+        if sta != STATUS.OK:
             return sta
 
-        // 填入数据到模型
-        self.model = new clz()
-        try {
-            self.parser.fill(self.model, self.params, true, false)
-        } catch (err) {
-            self.model = null
-            logger.fatal(err.toString())
+        # 填入数据到模型
+        self.model = clz()
+        try:
+            self.parser.fill(self.model, self.params, True, False)
+        except Exception as err:
+            self.model = None
+            logger.fatal(err)
             return STATUS.MODEL_ERROR
-        }
 
         return STATUS.OK
-    }
 
-    // 恢复上下文，涉及到数据的恢复，所以是异步模式
-    collect(): Promise<void> {
-        return new Promise<void>(resolve => (resolve()))
-    }
+    async def collect(self):
+        """ 恢复上下文，涉及到数据的恢复，所以是异步模式 """
+        pass
 
-    // 验证
-    needAuth(): boolean {
+    def needAuth(self) -> bool:
+        """ 此次请求需要验证 """
         return IsNeedAuth(self.model)
-    }
 
-    // 是否已经授权
-    abstract auth(): boolean
+    def auth(self) -> bool:
+        """ 是否已经授权 """
+        return None
 
-    // 需要业务层实现对api的流控，避免同一个api瞬间调用多次，业务层通过重载lock/unlock实现
-    // lock当即将调用api时由其他逻辑调用
-    lock(): Promise<boolean> {
-        return promise(true)
-    }
+    async def lock(self) -> bool:
+        """ 需要业务层实现对api的流控，避免同一个api瞬间调用多次，业务层通过重载lock/unlock实现,, lock当即将调用api时由其他逻辑调用 """
+        return False
 
-    unlock() {
-        // pass
-    }
+    async def unlock(self):
+        pass
 
-    // 同步模式会自动提交，异步模式需要手动提交
-    implSubmit: (opt?: TransactionSubmitOption) => void
-    private _submited: boolean
-    private _submited_timeout: boolean
-
-    async submit(opt?: TransactionSubmitOption) {
-        if (self._submited) {
-            if (!self._submited_timeout)
+    async def submit(self, opt: TransactionSubmitOption = None):
+        if self._submited:
+            if not self._submited_timeout:
                 logger.warn("数据已经发送")
             return
-        }
-        if (self._timeout) {
-            CancelDelay(self._timeout)
-            self._timeout = null
-            self._submited_timeout = true
-        }
-        self._submited = true
-        self._outputed = true
-        if (self.hookSubmit) {
-            try {
+
+        if self._timeout:
+            self._timeout.stop()
+            self._timeout = None
+            self._submited_timeout = True
+
+        self._submited = True
+        self._outputed = True
+        if self.hookSubmit:
+            try:
                 await self.hookSubmit()
-            } catch (err) {
+            except Exception as err:
                 logger.exception(err)
-            }
-        }
         self.implSubmit(opt)
 
-        // 只有打开了频控，并且此次是正常操作，才解锁
-        if (self.frqctl && self.status != STATUS.HFDENY)
+        # 只有打开了频控，并且此次是正常操作，才解锁
+        if self.frqctl and self.status != STATUS.HFDENY:
             self.unlock()
-    }
 
-    // 当提交的时候修改
-    hookSubmit: () => Promise<void>
-
-    // 输出文件
-    implOutput: (type: string, obj: any) => void
-    private _outputed: boolean
-
-    output(type: string, obj: any) {
-        if (self._outputed) {
+    def output(self, type, obj):
+        if self._outputed:
             logger.warn("api已经发送")
             return
-        }
-        if (self._timeout) {
-            CancelDelay(self._timeout)
-            self._timeout = null
-        }
-        self._outputed = true
-        self._submited = true
+
+        if self._timeout:
+            self._timeout.stop()
+            self._timeout = None
+
+        self._outputed = True
+        self._submited = True
         self.implOutput(type, obj)
-    }
 
-    protected waitTimeout() {
-        self._timeout = Delay(Config.TRANSACTION_TIMEOUT, () => {
-            self._cbTimeout()
-        })
-    }
+    def _waitTimeout(self):
+        self._timeout = time.Delayer(
+            config.TRANSACTION_TIMEOUT, self._cbTimeout)
+        self._timeout.start()
 
-    // 部分api本来时间就很长，所以存在自定义timeout的需求
-    timeout(seconds: number) {
-        if (self._timeout) {
-            CancelDelay(self._timeout)
-            self._timeout = null
-        }
-        if (seconds == -1)
+    def timeout(self, seconds):
+        """ 部分api本来时间就很长，所以存在自定义timeout的需求 """
+        if self._timeout:
+            self._timeout.stop()
+            self._timeout = None
+        if seconds == -1:
             return
-        self._timeout = Delay(seconds, () => {
-            self._cbTimeout()
-        })
-    }
+        self._timeout = time.Delayer(seconds, self._cbTimeout)
+        self._timeout.start()
 
-    private _cbTimeout() {
-        logger.warn("{{=it.action}} 超时", {action: self.action})
+    def _cbTimeout(self):
+        logger.warn("%s 超时" % self.action)
         self.status = STATUS.TIMEOUT
         self.submit()
-    }
-}
+
 
 class EmptyTransaction(Transaction):
 
     def waitTimeout(self):
-        pass    
+        pass
 
     def sessionId(self) -> string:
-        return None    
+        return None
 
     def auth(self) -> bool:
         return False

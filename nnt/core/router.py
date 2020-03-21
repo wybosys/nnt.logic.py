@@ -62,7 +62,7 @@ class ActionProto:
 AP_KEY = "__actionproto"
 
 # 定义router需要的model对象
-def action(model, options = None, comment = None):
+def action(fun, model, options = None, comment = None):
     ap = ActionProto()
     ap.clazz = model
     ap.comment = comment    
@@ -84,6 +84,12 @@ def action(model, options = None, comment = None):
     if not pas and ap.devopsrelease and config.DEVOPS_RELEASE:
         pas = True
     if pas:
-        setattr(model, AP_KEY, ap)
+        if not hasattr(model, AP_KEY):
+            setattr(model, AP_KEY, {})
+        model[AP_KEY][fun.__name__] = ap   
     return model
-    
+
+def FindAction(target, key: string) -> ActionProto:
+    if hasattr(target.__class__, AP_KEY):
+        return target.__class__[AP_KEY][key]
+    return None
