@@ -17,3 +17,9 @@ def delete(any, idx):
         del any[idx]
     except:
         pass
+
+def nonnull1st(*args):
+    for e in args:
+        if e != None:
+            return e
+    return None

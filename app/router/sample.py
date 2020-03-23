@@ -2,7 +2,7 @@ import nnt.core.router as r
 from ..model import *
 from nnt.core import time
 
-class Sample(IRouter):
+class Sample(r.IRouter):
 
     def __init__(self):
         super().__init__()

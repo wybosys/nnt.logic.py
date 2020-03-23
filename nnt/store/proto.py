@@ -94,21 +94,21 @@ def FpIsTypeEqual(l: FieldOption, r: FieldOption) -> bool:
         l.valtype == r.valtype and \
         l.loose == r.loose
 
-# 定义一个数据表模型，注意：数据表模型不能继承
 
-
-def table(clazz, dbid: str, tbnm: str, setting: TableSetting = None):
-    dp = TableInfo()
-    dp.id = dbid
-    dp.table = tbnm
-    dp.setting = setting
-    setattr(clazz, MP_KEY, dp)
-    return clazz
-
-# 返回基础的定义结构，之后的都直接使用固定的类型函数来声明
+def table(dbid: str, tbnm: str, setting: TableSetting = None):
+    """定义一个数据表模型，注意：数据表模型不能继承"""
+    def _(clazz):
+        dp = TableInfo()
+        dp.id = dbid
+        dp.table = tbnm
+        dp.setting = setting
+        setattr(clazz, MP_KEY, dp)
+        return clazz
+    return _
 
 
 def column(opts=None, setting=None) -> FieldOption:
+    """返回基础的定义结构，之后的都直接使用固定的类型函数来声明"""
     fp = FieldOption()
     if opts:
         fp.key = key in opts
@@ -121,7 +121,8 @@ def column(opts=None, setting=None) -> FieldOption:
         fp.desc = desc in opts
         fp.loose = loose in opts
     fp.setting = setting
-
+    return fp
+    
 
 def string(opts=None, setting=None):
     fp = column(opts)

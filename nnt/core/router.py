@@ -62,32 +62,34 @@ class ActionProto:
 AP_KEY = "__actionproto"
 
 # 定义router需要的model对象
-def action(fun, model, options = None, comment = None):
-    ap = ActionProto()
-    ap.clazz = model
-    ap.comment = comment    
-    if options:
-        for e in options:
-            setattr(ap, e, True)
-    # 判断有效性
-    pas = False
-    if not pas and ap.debug and config.DEBUG:
-        pas = True
-    if not pas and ap.develop and config.DEVELOP:
-        pas = True
-    if not pas and ap.local and config.LOCAL:
-        pas = True
-    if not pas and ap.devops and config.DEVOPS:
-        pas = True
-    if not pas and ap.devopsdevelop and config.DEVOPS_DEVELOP:
-        pas = True
-    if not pas and ap.devopsrelease and config.DEVOPS_RELEASE:
-        pas = True
-    if pas:
-        if not hasattr(model, AP_KEY):
-            setattr(model, AP_KEY, {})
-        model[AP_KEY][fun.__name__] = ap   
-    return model
+def action(model, options = None, comment = None):
+    def _(fun):
+        ap = ActionProto()
+        ap.clazz = model
+        ap.comment = comment    
+        if options:
+            for e in options:
+                setattr(ap, e, True)
+        # 判断有效性
+        pas = False
+        if not pas and ap.debug and config.DEBUG:
+            pas = True
+        if not pas and ap.develop and config.DEVELOP:
+            pas = True
+        if not pas and ap.local and config.LOCAL:
+            pas = True
+        if not pas and ap.devops and config.DEVOPS:
+            pas = True
+        if not pas and ap.devopsdevelop and config.DEVOPS_DEVELOP:
+            pas = True
+        if not pas and ap.devopsrelease and config.DEVOPS_RELEASE:
+            pas = True
+        if pas:
+            if not hasattr(model, AP_KEY):
+                setattr(model, AP_KEY, {})
+            model[AP_KEY][fun.__name__] = ap
+        return fun
+    return _
 
 def FindAction(target, key: str) -> ActionProto:
     if hasattr(target.__class__, AP_KEY):
