@@ -11,7 +11,7 @@ class App(ss.SObject):
     _shared = None
 
     @staticmethod
-    def shared() -> App:
+    def shared():
         return App._shared
 
     def __init__(self):
