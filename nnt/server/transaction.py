@@ -246,6 +246,7 @@ class Transaction:
         if self.frqctl and self.status != STATUS.HFDENY:
             self.unlock()
 
+
     def output(self, type, obj):
         if self._outputed:
             logger.warn("api已经发送")

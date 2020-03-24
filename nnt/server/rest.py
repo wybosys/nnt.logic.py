@@ -12,6 +12,7 @@ import inspect
 from .render import *
 from .parser import *
 from .file import RespFile
+from asyncio import futures
 
 
 class RestResponseData:
@@ -231,6 +232,7 @@ class JaprontoResponse:
         self.code = 200
         self.body = None
         self.raw = None
+        self._f = futures.Future()
 
     def setHeader(self, k, v):
         self._headers[k] = v
@@ -240,12 +242,18 @@ class JaprontoResponse:
             self._headers[k] = d[k]
 
     def send(self):
-        self._req.Response(
+        obj = self._req.Response(
             code=self.code,
             headers=self._headers,
             text=self.body,
             body=self.raw
         )
+        self._f.set_result(obj)
+        self._f.done()
+
+    @property
+    def promise(self):
+        return self._f
 
 
 class HttpServer:
@@ -256,7 +264,7 @@ class HttpServer:
         self._rest = rest
 
         async def worker(req):
-            await self._dowork(req)
+            return await self._dowork(req)
 
         # 根目录
         route = '/'
@@ -295,8 +303,8 @@ class HttpServer:
             if at(req.headers, "Access-Control-Request-Method") == "POST":
                 rsp.setHeader("Content-Type", "multipart/form-data")
             rsp.writeHead(204)
-            rsp.end()
-            return
+            rsp.send()
+            return rsp.promise
 
         # 处理url请求
         url: str = req.path
@@ -344,6 +352,7 @@ class HttpServer:
                     params[k] = json[k]
 
         await self.invoke(params, req, rsp)
+        return rsp.promise
 
     async def invoke(self, params, req, rsp: JaprontoResponse, ac=None):
         action = at(params, "action")

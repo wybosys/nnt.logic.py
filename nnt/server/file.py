@@ -7,7 +7,7 @@ class RespFile:
     """  专用来返回的文件对象 """
 
     @staticmethod
-    def Regular(file: str, typ: str = None) -> RespFile:
+    def Regular(file: str, typ: str = None) -> 'RespFile':
         r = RespFile()
         if not typ:
             typ = Mime.Type(file)
@@ -17,14 +17,14 @@ class RespFile:
         return r
 
     @staticmethod
-    def Buffer(buf: bytearray, typ: str = None) -> RespFile:
+    def Buffer(buf: bytearray, typ: str = None) -> 'RespFile':
         r = RespFile()
         r.type = typ
         r._buf = buf
         return r
 
     @staticmethod
-    def Plain(txt: str, typ: str = None) -> RespFile:
+    def Plain(txt: str, typ: str = None) -> 'RespFile':
         r = RespFile()
         r.type = typ
         r._buf = txt.encode('utf-8')
