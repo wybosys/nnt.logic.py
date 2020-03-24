@@ -91,7 +91,7 @@ async def Start(cfg):
             })
             _loggers.append(t)
     else:
-        await Stop()
+        Stop()
 
-async def Stop():
+def Stop():
     _loggers.clear()

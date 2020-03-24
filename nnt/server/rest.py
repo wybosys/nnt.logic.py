@@ -142,9 +142,9 @@ class Rest(AbstractServer):
     def wait(self):        
         self._hdl.wait()
 
-    async def stop(self):
+    def stop(self):
         self._hdl.stop()
-        await super().stop()
+        super().stop()
 
 class JaprontoNonblockingApplication(japronto.Application):
 
@@ -187,11 +187,11 @@ class JaprontoNonblockingApplication(japronto.Application):
     def wait_all(self):                
         for worker in self.workers:
             worker.join()
+        self.workers.clear()
 
     def stop_all(self):
         for worker in self.workers:
             worker.terminate()
-        self.workers.clear()
 
 class HttpServer:
 

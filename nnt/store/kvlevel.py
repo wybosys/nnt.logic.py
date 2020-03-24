@@ -33,7 +33,7 @@ class KvLevel(AbstractKv):
         self._db = leveldb.LevelDB(self._file)
         logger.info("打开 %s@level" % self.id)
 
-    async def close(self):
+    def close(self):
         self._db = None
 
     def get(self, key, cb):

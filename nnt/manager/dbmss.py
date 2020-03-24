@@ -22,13 +22,13 @@ async def Start(cfg):
             else:
                 print(t.id + "配置失败")
     else:
-        await Stop()
+        Stop()
 
-async def Stop():
+def Stop():
     global _dbs
     for k in _dbs:
         db = _dbs[k]
-        await db.close()
+        db.close()
     _dbs = {}
 
 # 获得指定名称的数据库连接

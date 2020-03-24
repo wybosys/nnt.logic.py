@@ -155,13 +155,13 @@ class App(app.App):
         # 等待服务停止
         servers.Wait()
 
-    async def stop(self):
-        await servers.Stop()
-        await dbmss.Stop()
-        await loggers.Stop()
+    def stop(self):
+        servers.Stop()
+        dbmss.Stop()
+        loggers.Stop()
 
         RunHooks(STOPPED)
-        await super().stop()
+        super().stop()
 
 
 # 用于挂住系统进程的钩子

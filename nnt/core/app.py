@@ -23,7 +23,7 @@ class App(ss.SObject):
         App._shared = self
 
         def cbstop(sig, frame):
-            kernel.corun(self.stop)
+            self.stop()
 
         signal.signal(signal.SIGINT, cbstop)
         signal.signal(signal.SIGTERM, cbstop)
@@ -32,7 +32,7 @@ class App(ss.SObject):
     async def start(self):
         self.signals.emit(kSignalAppStarted)
 
-    async def stop(self):
+    def stop(self):
         self.signals.emit(kSignalAppStopped)
 
     def instanceEntry(self, entry) -> object:

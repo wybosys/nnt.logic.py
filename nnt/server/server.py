@@ -19,7 +19,7 @@ class AbstractServer:
         """ 启动服务 """
         self._onStart()
     
-    async def stop(self):
+    def stop(self):
         """ 停止服务 """
         self._onStop()
 

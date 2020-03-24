@@ -22,15 +22,15 @@ async def Start(cfg):
             else:
                 print(t.id + "配置失败")
     else:
-        await Stop()
+        Stop()
 
 def Wait():    
     for k in _servers:
         _servers[k].wait()
 
-async def Stop():
+def Stop():
     global _servers
     for k in _servers:
         s = _servers[k]
-        await s.stop()
+        s.stop()
     _servers = {}
