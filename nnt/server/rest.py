@@ -9,6 +9,8 @@ from ..core.python import *
 from ..manager import config
 from .routers import *
 import inspect
+from .render import *
+from .parser import *
 
 
 class RestResponseData:
@@ -402,3 +404,10 @@ class HttpsServer:
 
     def wait(self):
         pass
+
+
+# 注册支持的输出格式
+RegisterRender("json", Json())
+
+# 注册支持的输入格式
+RegisterParser("jsobj", Jsobj())
