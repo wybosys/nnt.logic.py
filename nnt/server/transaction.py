@@ -147,7 +147,7 @@ class Transaction:
         self._outputed = False
 
         # 默认启动超时处理
-        self.waitTimeout()
+        self._waitTimeout()
 
     def sessionId(self):
         """返回事务用来区分客户端的id，通常业务中实现为sid"""

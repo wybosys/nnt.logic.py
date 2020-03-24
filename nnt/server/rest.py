@@ -8,6 +8,7 @@ from ..core import logger, app, url
 from ..core.python import *
 from ..manager import config
 from .routers import *
+import inspect
 
 
 class RestResponseData:
@@ -266,10 +267,10 @@ class HttpServer:
 
         # 直接对option进行成功响应
         if req.method == "OPTIONS":
-            if at(req.headers, "access-control-request-headers"):
+            if at(req.headers, "Access-Control-Request-Headers"):
                 rsp.setHeader("Access-Control-Allow-Headers",
-                              req.headers["access-control-request-headers"])
-            if at(req.headers, "access-control-request-method") == "POST":
+                              req.headers["Access-Control-Request-Headers"])
+            if at(req.headers, "Access-Control-Request-Method") == "POST":
                 rsp.setHeader("Content-Type", "multipart/form-data")
             rsp.writeHead(204)
             rsp.end()
@@ -278,7 +279,6 @@ class HttpServer:
         # 处理url请求
         url: str = req.path
         logger.log(req.path)
-        print(req.body)
 
         # 支持几种不同的路由格式
         # ?action=xxx.yyy&params
@@ -306,15 +306,21 @@ class HttpServer:
         # 如果是post请求，则处理一下form数据
         if req.method == "POST":
             # 如果是multipart-form得请求，则不适用于处理buffer
-            ct = at(req.headers, "content-type")
+            ct = at(req.headers, "Content-Type")
             if not ct:
                 ct = 'application/json'
             if 'form' in ct:
-                pass
+                form = req.form
+                files = req.files
+                for k in form:
+                    params[k] = form[k]
+                for k in files:
+                    params[k] = files[k]
             else:
-                pass
-        else:
-            self.invoke(params, req, rsp)
+                json = req.json
+                for k in json:
+                    params[k] = json[k]
+        self.invoke(params, req, rsp)
 
     def invoke(self, params, req, rsp, ac=None):
         action = at(params, "action")
@@ -352,7 +358,7 @@ class HttpServer:
                 if not t.info.addr:  # proxy
                     t.info.addr = at(req.headers, 'x-forwarded-for')
                 if not t.info.addr:  # normal
-                    t.info.addr = req.connection.remoteAddress
+                    t.info.addr = req.remote_addr
 
             # 绑定解析器
             t.parser = FindParser(params['_pfmt'])  # _pfmt parser format 预留关键字
