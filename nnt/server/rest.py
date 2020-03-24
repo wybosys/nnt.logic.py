@@ -59,16 +59,7 @@ class Rest(AbstractServer):
 
     def __init__(self):
         super().__init__()
-
-        self.listen: str = '127.0.0.1'
-        self.port: int = 80
-        self.https: bool = False
-        self.http2: bool = False
-        self.timeout: float = 0
-        self.imgsrv: str = None
-        self.mediasrv: str = None
-        self.router = None  # : string[] | IndexedObject;
-        self. _hdl = None  # : http.Server | https.Server;
+        self. _hdl = None
         self._routers = Routers()
 
     @property
@@ -87,6 +78,8 @@ class Rest(AbstractServer):
         self.listen = None
         if at(cfg, 'listen') and at(cfg, 'listen') != "*":
             self.listen = cfg['listen']
+        else:
+            self.listen = '127.0.0.1'
         self.port = cfg['port']
         self.imgsrv = at(cfg, 'imgsrv')
         self.mediasrv = at(cfg, 'mediasrv')
@@ -131,60 +124,46 @@ class Rest(AbstractServer):
         return self._hdl
 
     async def start(self):
-        cfg = {}
         if self.https:
-            cfg = {}
-            if config.HTTPS_PFX:
-                cfg["pfx"] = url.expand(config.HTTPS_PFX)
-            else:
-                cfg["key"] = url.expand(config.HTTPS_KEY)
-                cfg["cert"] = url.expand(config.HTTPS_CERT)
-            if config.HTTPS_PASSWD:
-                cfg["passphrase"] = config.HTTPS_PASSWD
             self._hdl = HttpsServer()
         elif self.http2:
-            cfg['pfx'] = url.expand(config.HTTPS_PFX)
-            cfg['spdy'] = {
-                'protocols': ['h2', 'spdy/3.1', 'http/1.1'],
-                'plain': False,
-                'connection': {
-                    'windowSize': 1024 * 1024,  # Server's window size
-                    # **optional** if true - server will send 3.1 frames on 3.0 *plain* spdy
-                    'autoSpdy31': False
-                }
-            }
-            if config.HTTPS_PASSWD:
-                cfg["passphrase"] = config.HTTPS_PASSWD
             self._hdl = Http2Server()
         else:
             self._hdl = HttpServer()
-        if self.timeout:
-            cfg['timeout'] = self.timeout
-        cfg['port'] = self.port
-        cfg['listen'] = self.listen
-        r = await self._hdl.start(cfg)
+        r = await self._hdl.start(self)
         if not r:
             logger.info("启动 %s@rest 失败" % self.id)
         else:
             logger.info("启动 %s@rest" % self.id)
             self.onStart()
 
+    def onStart(self):
+        pass
+
+    def onStop(self):
+        pass
+
 
 class HttpServer:
 
-    async def start(self, cfg):
-        return False
+    def __init__(self):
+        super().__init__()
+        self._hdl = japronto.Application()
+
+    async def start(self, svr: Rest):
+        self._hdl.run(host=svr.listen, port=svr.port)
+        return True
 
 
 class Http2Server:
 
-    async def start(self, cfg):
+    async def start(self, svr: Rest):
         logger.fatal('暂不支持http2模式')
         return False
 
 
 class HttpsServer:
 
-    async def start(self, cfg):
+    async def start(self, svr: Rest):
         logger.fatal('暂不支持https模式')
         return False
