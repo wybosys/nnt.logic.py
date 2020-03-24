@@ -158,8 +158,8 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
     def doInvoke(self, t: Transaction, params, req, rsp, ac=None):
         if req and rsp:
             t.payload = {req: req, rsp: rsp}
-            t.implSubmit = TransactionSubmit
-            t.implOutput = TransactionOutput
+            t.implSubmit = self._hdl.submit
+            t.implOutput = self._hdl.output
         else:
             t.implSubmit = ConsoleSubmit
             t.implOutput = ConsoleOutput
@@ -170,7 +170,7 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
         elif listen == "2":
             self._routers.unlisten(t)
         else:
-            self._routers.process(t)
+            self._routers.process(t)    
 
 
 class JaprontoNonblockingApplication(japronto.Application):
@@ -371,12 +371,17 @@ class HttpServer:
             # 处理调用
             self._rest.onBeforeInvoke(t)
             self._rest.doInvoke(t, params, req, rsp, ac)
-            self._reset.onAfterInvoke(t)
+            self._rest.onAfterInvoke(t)
         except Exception as err:
             logger.exception(err)
             t.status = STATUS.EXCEPTION
             t.submit()
 
+    def submit(self, t):
+        pass
+
+    def output(self, t):
+        pass
 
 class Http2Server:
 
