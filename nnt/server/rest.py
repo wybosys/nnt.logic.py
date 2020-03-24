@@ -137,14 +137,14 @@ class Rest(AbstractServer):
             logger.info("启动 %s@rest 失败" % self.id)
         else:
             logger.info("启动 %s@rest" % self.id)
-            self.onStart()
+            await super().start()
 
-    def onStart(self):
-        pass
+    def wait(self):        
+        self._hdl.wait()
 
-    def onStop(self):
-        pass
-
+    async def stop(self):
+        self._hdl.stop()
+        await super().stop()
 
 class JaprontoNonblockingApplication(japronto.Application):
 
@@ -158,7 +158,7 @@ class JaprontoNonblockingApplication(japronto.Application):
         sock.bind((host, port))
         os.set_inheritable(sock.fileno(), True)
 
-        workers = set()
+        self.workers = set()
 
         terminating = False
 
@@ -169,7 +169,7 @@ class JaprontoNonblockingApplication(japronto.Application):
             elif not terminating:
                 terminating = True
                 print('Termination request received')
-            for worker in workers:
+            for worker in self.workers:
                 worker.terminate()
 
         for _ in range(worker_num or 1):
@@ -179,11 +179,19 @@ class JaprontoNonblockingApplication(japronto.Application):
                             reloader_pid=reloader_pid))
             worker.daemon = True
             worker.start()
-            workers.add(worker)
+            self.workers.add(worker)
 
         # prevent further operations on socket in parent
         sock.close()
 
+    def wait_all(self):                
+        for worker in self.workers:
+            worker.join()
+
+    def stop_all(self):
+        for worker in self.workers:
+            worker.terminate()
+        self.workers.clear()
 
 class HttpServer:
 
@@ -195,6 +203,12 @@ class HttpServer:
         self._hdl.run(host=svr.listen, port=svr.port)
         return True
 
+    def wait(self):
+        self._hdl.wait_all()
+
+    def stop(self):
+        self._hdl.stop_all()
+
 
 class Http2Server:
 
@@ -202,9 +216,14 @@ class Http2Server:
         logger.fatal('暂不支持http2模式')
         return False
 
+    def wait(self):
+        pass
 
 class HttpsServer:
 
     async def start(self, svr: Rest):
         logger.fatal('暂不支持https模式')
         return False
+
+    def wait(self):
+        pass

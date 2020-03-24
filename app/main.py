@@ -1,12 +1,10 @@
 from nnt.manager.app import App
-import asyncio
+from nnt.core.kernel import corun
+
 
 def launch():
     App.LoadConfig()
 
-    app = App()    
+    app = App()
     app.assetDir = "~/assets/"
-
-    loop = asyncio.get_event_loop()    
-    loop.run_until_complete(app.start())
-    loop.close()    
+    corun(app.start)

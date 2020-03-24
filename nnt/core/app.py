@@ -1,5 +1,7 @@
 import importlib
 import termcolor
+import signal
+from ..core import kernel
 from . import signals as ss, logger
 
 kSignalAppStarted = '::nn::app::started'
@@ -19,6 +21,13 @@ class App(ss.SObject):
         self.signals.register(kSignalAppStarted)
         self.signals.register(kSignalAppStopped)
         App._shared = self
+
+        def cbstop(sig, frame):
+            kernel.corun(self.stop)
+
+        signal.signal(signal.SIGINT, cbstop)
+        signal.signal(signal.SIGTERM, cbstop)
+        signal.signal(signal.SIGHUP, cbstop)
 
     async def start(self):
         self.signals.emit(kSignalAppStarted)

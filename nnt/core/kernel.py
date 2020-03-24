@@ -1,16 +1,19 @@
 import json
+import asyncio
 from . import logger
 
-def toJson(o, default = None):
+
+def toJson(o, default=None):
     r = None
     try:
         r = json.dumps(o)
     except:
-        r = default    
+        r = default
     return r
 
-def toJsonObject(o, default = None):
-    t = type (o)
+
+def toJsonObject(o, default=None):
+    t = type(o)
     if t == string:
         if o == "undefined" or o == "null":
             return default
@@ -19,8 +22,14 @@ def toJsonObject(o, default = None):
             r = json.loads(o)
         except Exception as err:
             logger.warn(o + " " + err)
-            r = default        
+            r = default
         return r
     elif t == dict or t == list:
         return o
     return default
+
+
+def corun(func):
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(func())
+    loop.close()

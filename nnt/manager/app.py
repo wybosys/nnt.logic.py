@@ -1,7 +1,11 @@
-import os, json, shutil, sys
+import os
+import json
+import shutil
+import sys
 from ..core.python import *
 from ..core import logger, url, app
-from . import config, assets, loggers, dbmss, servers, containers
+from . import config, assets, loggers, dbmss, servers
+
 
 class App(app.App):
 
@@ -9,7 +13,7 @@ class App(app.App):
     CurrentConfig = None
 
     def __init__(self):
-        super().__init__()                 
+        super().__init__()
 
         # 资源目录
         self._assetDir = ""
@@ -18,7 +22,7 @@ class App(app.App):
         RunHooks(BOOT)
 
     @staticmethod
-    def LoadConfig(appcfg = "~/app.json", devcfg = "~/devops.json"):
+    def LoadConfig(appcfg="~/app.json", devcfg="~/devops.json"):
         """加载程序配置"""
         appcfg = url.expand(appcfg)
         if devcfg:
@@ -29,12 +33,12 @@ class App(app.App):
             print("读取配置文件失败")
             return None
 
-        if devcfg and not os.path.exists(devcfg):        
+        if devcfg and not os.path.exists(devcfg):
             print("读取DEVOPS配置文件失败")
-            return None        
+            return None
 
         # 通过配置文件来启动服务端
-        cfg = json.load(open(appcfg, 'r'))        
+        cfg = json.load(open(appcfg, 'r'))
 
         # 处理输入参数
         argv = sys.argv
@@ -51,15 +55,14 @@ class App(app.App):
                         cfg['server'] = e
                         break
             # 其他配置清空
-            cfg['container'] = []
             cfg['dbms'] = []
 
         config.DEBUG = indexOf(argv, "--debug")
-        if config.DEBUG != -1:        
+        if config.DEBUG != -1:
             logger.log("debug模式启动")
         else:
             config.DEVELOP = indexOf(argv, "--develop")
-            if config.DEVELOP != -1:        
+            if config.DEVELOP != -1:
                 logger.log("develop模式启动")
             else:
                 config.PUBLISH = indexOf(argv, "--publish")
@@ -79,7 +82,7 @@ class App(app.App):
             logger.info("DEVOPS DEVELOP 环境")
         config.DEVOPS_RELEASE = config.IsDevopsRelease()
         if config.DEVOPS_RELEASE:
-            logger.info("DEVOPS RELEASE 环境");
+            logger.info("DEVOPS RELEASE 环境")
 
         # 设置为当前参数
         App.CurrentConfig = cfg
@@ -120,7 +123,7 @@ class App(app.App):
                 config.ACCESS_DENY = cfg['deny']
 
         if not os.path.exists(config.CACHE):
-            shutil.os.makedirs(config.CACHE)       
+            shutil.os.makedirs(config.CACHE)
 
         return cfg
 
@@ -135,30 +138,31 @@ class App(app.App):
 
     async def start(self):
         # 设置资源管理器的目录
-        assets.directory = self.assetDir        
+        assets.directory = self.assetDir
 
         cfg = App.CurrentConfig
         if 'logger' in cfg:
-            await loggers.Start(cfg['logger'])            
+            await loggers.Start(cfg['logger'])
         if 'dbms' in cfg:
             await dbmss.Start(cfg['dbms'])
         if 'server' in cfg:
             await servers.Start(cfg['server'])
-        if 'container' in cfg:
-            await containers.Start(cfg['container'])
 
         # 启动成功
         RunHooks(STARTED)
         await super().start()
-    
-    async def stop(self):
-        await servers.Stop();
-        await dbmss.Stop();
-        await loggers.Stop();
-        await containers.Stop();
 
-        RunHooks(STOPPED);        
-        return super().stop()
+        # 等待服务停止
+        servers.Wait()
+
+    async def stop(self):
+        await servers.Stop()
+        await dbmss.Stop()
+        await loggers.Stop()
+
+        RunHooks(STOPPED)
+        await super().stop()
+
 
 # 用于挂住系统进程的钩子
 BOOT = 'boot'
@@ -168,6 +172,7 @@ STOPPED = 'stopped'
 # 全局钩子
 _hooks = {}
 
+
 def Hook(step, proc):
     if step not in _hooks:
         arr = []
@@ -176,25 +181,27 @@ def Hook(step, proc):
         arr = _hooks[step]
     arr.append(proc)
 
+
 def RunHooks(step):
     if step in _hooks:
         arr = _hooks[step]
         for e in arr:
             e()
 
+
 # 处理entry的url转换
 url.RegisterScheme("entry",
-lambda body:
-    App.shared.entryDir + body
-)
+                   lambda body:
+                   App.shared.entryDir + body
+                   )
 
 # 处理clientSDK的url转换
-url.RegisterScheme("sdk", 
-lambda body:
-    url.home() + "/src/" + body
-)
+url.RegisterScheme("sdk",
+                   lambda body:
+                   url.home() + "/src/" + body
+                   )
 
-url.RegisterScheme("cache", 
-lambda body:
-    config.CACHE + "/" + body
-)
+url.RegisterScheme("cache",
+                   lambda body:
+                   config.CACHE + "/" + body
+                   )

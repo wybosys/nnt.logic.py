@@ -17,10 +17,14 @@ class AbstractServer:
     
     async def start(self):
         """ 启动服务 """
-        pass
+        self._onStart()
     
     async def stop(self):
         """ 停止服务 """
+        self._onStop()
+
+    def wait(self):
+        """ 等待停止 """
         pass
     
     def _onStart(self):

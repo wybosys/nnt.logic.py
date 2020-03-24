@@ -1,8 +1,9 @@
 from .store import *
 
+
 class AbstractKv(AbstractDbms):
 
-    def get(self, key, cb): 
+    def get(self, key, cb):
         """ cb (variant):void """
         pass
 
@@ -17,26 +18,27 @@ class AbstractKv(AbstractDbms):
     def delete(self, key, cb):
         """ cb: (res: DbExecuteStat) => void """
         pass
-    
+
     def autoinc(self, key, delta, cb):
         """ kv数据库通常没有自增函数，所以需要各个业务类自己实现
         cb: (res: DbExecuteStat) => void """
         pass
-    
+
     def inc(self, key, delta, cb):
         """ cb: (id: number) => void """
         pass
+
 
 class AbstractNosql(AbstractKv):
 
     def translate(self, filter):
         """  将filter转换成数据库查询的命令 """
         pass
-    
+
     def innerId(self, rcd):
         """ 获得记录的内部id """
         pass
-    
+
     def query(self, page, cmd, limit, skip, t, cb):
         """ @page 数据分片，mongo中叫collection
         @cmd 查询指令 """
@@ -65,7 +67,7 @@ class AbstractNosql(AbstractKv):
 
     def modifyone(self, page, iid, cmd, cb):
         pass
-     
+
     def update(self, page, cmd, cb):
         pass
 

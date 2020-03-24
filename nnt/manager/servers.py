@@ -24,6 +24,10 @@ async def Start(cfg):
     else:
         await Stop()
 
+def Wait():    
+    for k in _servers:
+        _servers[k].wait()
+
 async def Stop():
     global _servers
     for k in _servers:
