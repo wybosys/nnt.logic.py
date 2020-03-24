@@ -4,7 +4,7 @@ import multiprocessing
 from .server import *
 from .apiserver import *
 from .transaction import *
-from ..core import logger, app, url, time, kernel
+from ..core import logger, app, url, time, kernel, codec
 from ..core.python import *
 from ..manager import config
 from .routers import *
@@ -244,7 +244,7 @@ class JaprontoResponse:
             self._headers[k] = d[k]
 
     def send(self):
-        print(self.body, self.raw, self.code, self._headers)
+        #print([self.body, self.raw, self.code, self._headers])
         self._obj = self._req.Response(
             code=self.code,
             headers=self._headers,
@@ -422,8 +422,11 @@ class HttpServer:
         if t.responseSessionId:
             ct[RESPONSE_SID] = t.sessionId()
         buf = t.render.render(t, opt)
+        if t.gzip:
+            pl.rsp.raw = codec.gzip_compress(buf)
+        else:
+            pl.rsp.body = buf
         pl.rsp.setHeaders(ct)
-        pl.rsp.body = buf
         pl.rsp.send()
 
     def output(self, t, type: str, obj):
