@@ -1,5 +1,6 @@
 from ..core.python import *
 
+
 class AbstractServer:
 
     def __init__(self):
@@ -14,11 +15,11 @@ class AbstractServer:
             return False
         self.id = cfg['id']
         return True
-    
+
     async def start(self):
         """ 启动服务 """
         self._onStart()
-    
+
     def stop(self):
         """ 停止服务 """
         self._onStop()
@@ -26,17 +27,18 @@ class AbstractServer:
     def wait(self):
         """ 等待停止 """
         pass
-    
+
     def _onStart(self):
-        pass    
+        pass
 
     def _onStop(self):
         pass
 
+
 class IConsoleServer:
     """如果需要在业务中的api调用某一个服务(使用Servers.Call函数)则目标server必须实现此接口"""
-    
-    def invoke(self, params, req, rsp, ac = None):
+
+    def invoke(self, params, req, rsp, ac=None):
         """ 通过控制台执行
             @params 调用参数
             @req 请求对象

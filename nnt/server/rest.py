@@ -64,7 +64,7 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
         super().__init__()
         self. _hdl = None
 
-    def instanceTransaction(self):
+    def instanceTransaction(self) -> Transaction:
         """ 用来构造请求事物的类型 """
         return EmptyTransaction()
 
@@ -125,10 +125,10 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
         if self.https:
             self._hdl = HttpsServer()
         elif self.http2:
-            self._hdl = Http2Server()
+            self._hdl = Http2Server(self)
         else:
             self._hdl = HttpServer()
-        r = await self._hdl.start(self)
+        r = await self._hdl.start()
         if not r:
             logger.info("启动 %s@rest 失败" % self.id)
         else:
@@ -141,6 +141,33 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
     def stop(self):
         self._hdl.stop()
         super().stop()
+
+    def invoke(self, params, req, rsp, ac=None):
+        self._hdl.invoke(self, params, req, rsp, ac)
+
+    def onBeforeInvoke(self, trans: Transaction):
+        """处理请求前"""
+        pass
+
+    def onAfterInvoke(self, trans: Transaction):
+        pass
+
+    def doInvoke(self, t: Transaction, params, req, rsp, ac=None):
+        if req and rsp:
+            t.payload = {req: req, rsp: rsp}
+            t.implSubmit = TransactionSubmit
+            t.implOutput = TransactionOutput
+        else:
+            t.implSubmit = ConsoleSubmit
+            t.implOutput = ConsoleOutput
+
+        listen = at(params, '_listen')
+        if listen == "1":
+            self._routers.listen(t)
+        elif listen == "2":
+            self._routers.unlisten(t)
+        else:
+            self._routers.process(t)
 
 
 class JaprontoNonblockingApplication(japronto.Application):
@@ -191,14 +218,36 @@ class JaprontoNonblockingApplication(japronto.Application):
             worker.terminate()
 
 
+class JaprontoResponse:
+
+    def __init__(self, req):
+        super().__init__()
+        self._req = req
+        self._headers = {}
+
+    def setHeader(self, k, v):
+        self._headers[k] = v
+
+
 class HttpServer:
 
-    def __init__(self):
+    def __init__(self, rest: Rest):
         super().__init__()
         self._hdl = JaprontoNonblockingApplication()
+        self._rest = rest
 
-    async def start(self, svr: Rest):
-        self._hdl.run(host=svr.listen, port=svr.port)
+        route = '/'
+        self._hdl.router.add_route(route, self._dowork)
+
+        # 动态增加目录监听
+        n = 0
+        while n < 128:
+            n += 1
+            route += '{_p%d}/' % n
+            self._hdl.router.add_route(route, self._dowork)
+
+    async def start(self):
+        self._hdl.run(host=self._rest.listen, port=self._rest.port)
         return True
 
     def wait(self):
@@ -207,10 +256,121 @@ class HttpServer:
     def stop(self):
         self._hdl.stop_all()
 
+    def _dowork(self, req):
+        rsp = JaprontoResponse(req)
+
+        # 打开跨域支持
+        rsp.setHeader("Access-Control-Allow-Origin", "*")
+        rsp.setHeader("Access-Control-Allow-Credentials", "true")
+        rsp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+
+        # 直接对option进行成功响应
+        if req.method == "OPTIONS":
+            if at(req.headers, "access-control-request-headers"):
+                rsp.setHeader("Access-Control-Allow-Headers",
+                              req.headers["access-control-request-headers"])
+            if at(req.headers, "access-control-request-method") == "POST":
+                rsp.setHeader("Content-Type", "multipart/form-data")
+            rsp.writeHead(204)
+            rsp.end()
+            return
+
+        # 处理url请求
+        url: str = req.path
+        logger.log(req.path)
+        print(req.body)
+
+        # 支持几种不同的路由格式
+        # ?action=xxx.yyy&params
+        # $$/xxx.yyy$params
+        # xxx/yyy&params
+        params = req.query.copy()
+        # 为了支持第三方平台通过action同名传递动作
+        if url.startswith("/$$/") or url.startswith("/action/"):
+            p = url.split("/")
+            pl = len(p)
+            i = 0
+            while i < pl:
+                k = p[i]
+                v = p[i+1]
+                params[k] = v
+                i += 2
+        else:
+            p = url.split('/')
+            pl = len(p)
+            if pl >= 2:
+                r = p[pl - 2]
+                a = p[pl - 1]
+                params['action'] = r + '.' + a
+
+        # 如果是post请求，则处理一下form数据
+        if req.method == "POST":
+            # 如果是multipart-form得请求，则不适用于处理buffer
+            ct = at(req.headers, "content-type")
+            if not ct:
+                ct = 'application/json'
+            if 'form' in ct:
+                pass
+            else:
+                pass
+        else:
+            self.invoke(params, req, rsp)
+
+    def invoke(self, params, req, rsp, ac=None):
+        action = at(params, "action")
+        if not action:
+            rsp.writeHead(400)
+            rsp.end()
+            return
+
+        t = self._rest.instanceTransaction()
+        try:
+            t.ace = ac
+            t.server = self._rest
+            t.action = action
+            t.params = params
+
+            # 整理数据
+            if req:  # 如果是通过console调用，则req会为none
+                if "_agent" in params:
+                    t.info.ua = params["_agent"]
+                else:
+                    t.info.ua = at(req.headers, 'user-agent')
+                if not t.info.ua:
+                    t.info.ua = 'unknown'
+                t.info.agent = t.info.ua.lower()
+                t.info.host = at(req.headers, 'host')
+                t.info.origin = at(req.headers, 'origin')
+                t.info.referer = at(req.headers, 'referer')
+                t.info.path = req.path
+                if 'accept-encoding' in req.headers:
+                    t.gzip = 'gzip' in req.headers['accept-encoding']
+
+                # 获取客户端真实ip
+                if not t.info.addr:  # docker
+                    t.info.addr = at(req.headers, 'http_x_forwarded_for')
+                if not t.info.addr:  # proxy
+                    t.info.addr = at(req.headers, 'x-forwarded-for')
+                if not t.info.addr:  # normal
+                    t.info.addr = req.connection.remoteAddress
+
+            # 绑定解析器
+            t.parser = FindParser(params['_pfmt'])  # _pfmt parser format 预留关键字
+            t.render = FindRender(params['_rfmt'])  # _ofmt render format 预留关键字
+
+            # 处理调用
+            self._rest.onBeforeInvoke(t)
+            self._rest.doInvoke(t, params, req, rsp, ac)
+            self._reset.onAfterInvoke(t)
+        except Exception as err:
+            logger.exception(err)
+            t.status = STATUS.EXCEPTION
+            t.submit()
+
 
 class Http2Server:
 
-    async def start(self, svr: Rest):
+    async def start(self):
         logger.fatal('暂不支持http2模式')
         return False
 
@@ -220,7 +380,7 @@ class Http2Server:
 
 class HttpsServer:
 
-    async def start(self, svr: Rest):
+    async def start(self):
         logger.fatal('暂不支持https模式')
         return False
 
