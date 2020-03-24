@@ -149,7 +149,6 @@ class App(app.App):
 
         # 启动成功
         RunHooks(STARTED)
-        
         await super().start()
     
     async def stop(self):
