@@ -24,11 +24,6 @@
                             "entry://app/model/sample"
                         ]
                     }
-                },
-                "nnt.thirds.rmq.RAdmin": {
-                    "host": "develop.91egame.com",
-                    "user": "root",
-                    "password": "root"
                 }
             }
         },

@@ -119,7 +119,7 @@ class Rest(AbstractServer):
                     if not router:
                         logger.warn("没有找到该实例类型 %s" % e)
                         return False
-                    cfg = self.router[e]                    
+                    cfg = self.router[e]
                     if not router.config(cfg):
                         logger.warn("路由配置出错 %s" % e)
                         return False
@@ -155,9 +155,9 @@ class Rest(AbstractServer):
             }
             if config.HTTPS_PASSWD:
                 cfg["passphrase"] = config.HTTPS_PASSWD
-            this._hdl = Http2Server()
+            self._hdl = Http2Server()
         else:
-            this._hdl = HttpServer()
+            self._hdl = HttpServer()
         if self.timeout:
             cfg['timeout'] = self.timeout
         cfg['port'] = self.port
@@ -179,10 +179,12 @@ class HttpServer:
 class Http2Server:
 
     async def start(self, cfg):
+        logger.fatal('暂不支持http2模式')
         return False
 
 
 class HttpsServer:
 
     async def start(self, cfg):
+        logger.fatal('暂不支持https模式')
         return False
