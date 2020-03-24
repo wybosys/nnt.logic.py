@@ -123,11 +123,11 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
 
     async def start(self):
         if self.https:
-            self._hdl = HttpsServer()
+            self._hdl = HttpsServer(self)
         elif self.http2:
             self._hdl = Http2Server(self)
         else:
-            self._hdl = HttpServer()
+            self._hdl = HttpServer(self)
         r = await self._hdl.start()
         if not r:
             logger.info("启动 %s@rest 失败" % self.id)
@@ -370,6 +370,10 @@ class HttpServer:
 
 class Http2Server:
 
+    def __init__(self, rest: Rest):
+        super().__init__()
+        self._rest = rest
+
     async def start(self):
         logger.fatal('暂不支持http2模式')
         return False
@@ -379,6 +383,10 @@ class Http2Server:
 
 
 class HttpsServer:
+
+    def __init__(self, rest: Rest):
+        super().__init__()
+        self._rest = rest
 
     async def start(self):
         logger.fatal('暂不支持https模式')
