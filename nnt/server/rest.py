@@ -11,8 +11,7 @@ from .routers import *
 import inspect
 from .render import *
 from .parser import *
-import gzip
-import zlib
+from .file import RespFile
 
 
 class RestResponseData:
@@ -53,14 +52,14 @@ class RestNode:
 
 class TransactionPayload:
 
-    def __init__(self):
+    def __init__(self, req=None, rsp=None):
         super().__init__()
 
         # rest服务收到的请求
-        self.req  # : http.IncomingMessage;
+        self.req = req  # : http.IncomingMessage;
 
         # 用来发送响应的数据
-        self.rsp  # : http.ServerResponse;
+        self.rsp = rsp  # : http.ServerResponse;
 
 
 class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer):
@@ -159,7 +158,7 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
 
     async def doInvoke(self, t: Transaction, params, req, rsp, ac=None):
         if req and rsp:
-            t.payload = {req: req, rsp: rsp}
+            t.payload = TransactionPayload(req, rsp)
             t.implSubmit = self._hdl.submit
             t.implOutput = self._hdl.output
         else:
@@ -229,9 +228,24 @@ class JaprontoResponse:
         super().__init__()
         self._req = req
         self._headers = {}
+        self.code = 200
+        self.body = None
+        self.raw = None
 
     def setHeader(self, k, v):
         self._headers[k] = v
+
+    def setHeaders(self, d):
+        for k in d:
+            self._headers[k] = d[k]
+
+    def send(self):
+        self._req.Response(
+            code=self.code,
+            headers=self._headers,
+            text=self.body,
+            body=self.raw
+        )
 
 
 class HttpServer:
@@ -331,11 +345,11 @@ class HttpServer:
 
         await self.invoke(params, req, rsp)
 
-    async def invoke(self, params, req, rsp, ac=None):
+    async def invoke(self, params, req, rsp: JaprontoResponse, ac=None):
         action = at(params, "action")
         if not action:
-            rsp.writeHead(400)
-            rsp.end()
+            rsp.code = 400
+            rsp.send()
             return
 
         t = self._rest.instanceTransaction()
@@ -350,22 +364,22 @@ class HttpServer:
                 if "_agent" in params:
                     t.info.ua = params["_agent"]
                 else:
-                    t.info.ua = at(req.headers, 'user-agent')
+                    t.info.ua = at(req.headers, 'User-Agent')
                 if not t.info.ua:
                     t.info.ua = 'unknown'
                 t.info.agent = t.info.ua.lower()
-                t.info.host = at(req.headers, 'host')
-                t.info.origin = at(req.headers, 'origin')
-                t.info.referer = at(req.headers, 'referer')
+                t.info.host = at(req.headers, 'Host')
+                t.info.origin = at(req.headers, 'Origin')
+                t.info.referer = at(req.headers, 'Referer')
                 t.info.path = req.path
-                if 'accept-encoding' in req.headers:
-                    t.gzip = 'gzip' in req.headers['accept-encoding']
+                if 'Accept-Encoding' in req.headers:
+                    t.gzip = 'gzip' in req.headers['Accept-Encoding']
 
                 # 获取客户端真实ip
                 if not t.info.addr:  # docker
-                    t.info.addr = at(req.headers, 'http_x_forwarded_for')
+                    t.info.addr = at(req.headers, 'Http_X_Forwarded_For')
                 if not t.info.addr:  # proxy
-                    t.info.addr = at(req.headers, 'x-forwarded-for')
+                    t.info.addr = at(req.headers, 'X-Forwarded-For')
                 if not t.info.addr:  # normal
                     t.info.addr = req.remote_addr
 
@@ -384,7 +398,7 @@ class HttpServer:
             t.status = STATUS.EXCEPTION
             await t.submit()
 
-    def submit(self, t, opt: TransactionSubmitOption = None):
+    def submit(self, t: Transaction, opt: TransactionSubmitOption = None):
         pl: TransactionPayload = t.payload
         ct = {
             "Content-Type": opt.type if (opt and opt.type) else t.render.type
@@ -394,13 +408,11 @@ class HttpServer:
         if t.responseSessionId:
             ct[RESPONSE_SID] = t.sessionId()
         buf = t.render.render(t, opt)
-        if t.gzip:
-            pass
-        else:
-            pl.rsp.writeHead(200, ct)
-            pl.rsp.end(buf)
+        pl.rsp.setHeaders(ct)
+        pl.rsp.body = buf
+        pl.rsp.send()
 
-    def output(self, t, type, obj):
+    def output(self, t, type: str, obj):
         pl: TransactionPayload = t.payload
         ct = {"Content-Type": type}
         if self.gzip:
@@ -426,23 +438,15 @@ class HttpServer:
                                  'attachment; filename=' + obj.file)
                 pl.rsp.setHeader('Content-Description', "File Transfer")
                 pl.rsp.setHeader('Content-Transfer-Encoding', 'binary')
-            pl.rsp.writeHead(200, ct)
+            pl.rsp.setHeaders(ct)
             if self.gzip and not self.compressed:
                 obj.readStream.pipe(zlib.createGzip()).pipe(pl.rsp)
             else:
                 obj.readStream.pipe(pl.rsp)
-        elif isinstance(obj, Stream):
-            pl.rsp.writeHead(200, ct)
-            if self.gzip and not self.compressed:
-                obj.pipe(zlib.createGzip()).pipe(pl.rsp)
-            else:
-                obj.pipe(pl.rsp)
         else:
-            pl.rsp.writeHead(200, ct)
-            if self.gzip:
-                pass
-            else:
-                pl.rsp.end(obj)
+            pl.rsp.raw = obj
+            pl.rsp.setHeaders(ct)
+            pl.rsp.send()
 
 
 class Http2Server:
