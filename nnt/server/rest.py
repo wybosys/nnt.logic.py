@@ -233,6 +233,7 @@ class JaprontoResponse:
         self.body = None
         self.raw = None
         self._f = futures.Future()
+        self._obj = None
 
     def setHeader(self, k, v):
         self._headers[k] = v
@@ -242,17 +243,19 @@ class JaprontoResponse:
             self._headers[k] = d[k]
 
     def send(self):
-        obj = self._req.Response(
+        self._obj = self._req.Response(
             code=self.code,
             headers=self._headers,
             text=self.body,
             body=self.raw
         )
-        self._f.set_result(obj)
-        self._f.done()
+        self._f.set_result(self._obj)
 
     @property
     def promise(self):
+        # 如果已经计算完成，则直接返回response对象，而不是像js返回done之后的promise对象（py看起来不支持）
+        if self._obj:
+            return self._obj
         return self._f
 
 
