@@ -1,4 +1,23 @@
-import datetime, time, threading
+import datetime
+import time
+import threading
+
+MINUTE = 60
+MINUTE_2 = 120
+MINUTE_3 = 180
+MINUTE_4 = 240
+MINUTE_5 = 300
+MINUTE_15 = 900
+MINUTE_30 = 1800
+HOUR = 3600
+HOUR_2 = 7200
+HOUR_6 = 21600
+HOUR_12 = 43200
+DAY = 86400
+WEEK = 604800
+MONTH = 2592000
+YEAR = 31104000
+
 
 class DateTime:
 
@@ -12,11 +31,12 @@ class DateTime:
     def Current():
         """int形式的时间戳"""
         return int(time.time())
-    
+
+
 class Delayer:
 
     def __init__(self, seconds, func):
-        super().__init__()    
+        super().__init__()
         self.interval = seconds
         self.func = func
         self._tmr = None

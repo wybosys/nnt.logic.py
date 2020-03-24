@@ -4,13 +4,15 @@ import multiprocessing
 from .server import *
 from .apiserver import *
 from .transaction import *
-from ..core import logger, app, url
+from ..core import logger, app, url, time
 from ..core.python import *
 from ..manager import config
 from .routers import *
 import inspect
 from .render import *
 from .parser import *
+import gzip
+import zlib
 
 
 class RestResponseData:
@@ -170,7 +172,7 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
         elif listen == "2":
             self._routers.unlisten(t)
         else:
-            self._routers.process(t)    
+            self._routers.process(t)
 
 
 class JaprontoNonblockingApplication(japronto.Application):
@@ -377,11 +379,66 @@ class HttpServer:
             t.status = STATUS.EXCEPTION
             t.submit()
 
-    def submit(self, t):
-        pass
+    def submit(self, t, opt: TransactionSubmitOption = None):
+        pl: TransactionPayload = t.payload
+        ct = {
+            "Content-Type": opt.type if (opt and opt.type) else t.render.type
+        }
+        if t.gzip:
+            ct["Content-Encoding"] = "gzip"
+        if t.responseSessionId:
+            ct[RESPONSE_SID] = t.sessionId()
+        buf = t.render.render(self, opt)
+        if t.gzip:
+            pass
+        else:
+            pl.rsp.writeHead(200, ct)
+            pl.rsp.end(buf)
 
-    def output(self, t):
-        pass
+    def output(self, t, type, obj):
+        pl: TransactionPayload = t.payload
+        ct = {"Content-Type": type}
+        if self.gzip:
+            ct["Content-Encoding"] = "gzip"
+        if isinstance(obj, RespFile):
+            ct["Content-Length"] = obj.length
+            if obj.cachable:
+                # 只有文件对象才可以增加过期控制
+                if pl.req.headers["If-Modified-Since"]:
+                    # 判断下请求的文件有没有改变
+                    if obj.stat.mtime.toUTCString() == pl.req.headers["If-Modified-Since"]:
+                        pl.rsp.writeHead(304, "Not Modified")
+                        pl.rsp.end()
+                        return
+                ct["Expires"] = obj.expire.toUTCString()
+                ct["Cache-Control"] = "max-age=" + time.WEEK
+                ct["Last-Modified"] = obj.stat.mtime.toUTCString()
+            # 如果是提供下载
+            if obj.download:
+                pl.rsp.setHeader('Accept-Ranges', 'bytes')
+                pl.rsp.setHeader('Accept-Length', obj.length)
+                pl.rsp.setHeader('Content-Disposition',
+                                 'attachment; filename=' + obj.file)
+                pl.rsp.setHeader('Content-Description', "File Transfer")
+                pl.rsp.setHeader('Content-Transfer-Encoding', 'binary')
+            pl.rsp.writeHead(200, ct)
+            if self.gzip and not self.compressed:
+                obj.readStream.pipe(zlib.createGzip()).pipe(pl.rsp)
+            else:
+                obj.readStream.pipe(pl.rsp)
+        elif isinstance(obj, Stream):
+            pl.rsp.writeHead(200, ct)
+            if self.gzip and not self.compressed:
+                obj.pipe(zlib.createGzip()).pipe(pl.rsp)
+            else:
+                obj.pipe(pl.rsp)
+        else:
+            pl.rsp.writeHead(200, ct)
+            if self.gzip:
+                pass
+            else:
+                pl.rsp.end(obj)
+
 
 class Http2Server:
 
