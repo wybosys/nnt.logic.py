@@ -1,12 +1,13 @@
 import japronto
 import socket
 import multiprocessing
-from .server import AbstractServer
+from .server import *
+from .apiserver import *
 from .transaction import Transaction, EmptyTransaction
 from ..core import logger, app, url
 from ..core.python import *
 from ..manager import config
-from .routers import Routers
+from .routers import *
 
 
 class RestResponseData:
@@ -57,16 +58,11 @@ class TransactionPayload:
         self.rsp  # : http.ServerResponse;
 
 
-class Rest(AbstractServer):
+class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer):
 
     def __init__(self):
         super().__init__()
         self. _hdl = None
-        self._routers = Routers()
-
-    @property
-    def routers(self) -> Routers:
-        return self._routers
 
     def instanceTransaction(self):
         """ 用来构造请求事物的类型 """
@@ -139,12 +135,13 @@ class Rest(AbstractServer):
             logger.info("启动 %s@rest" % self.id)
             await super().start()
 
-    def wait(self):        
+    def wait(self):
         self._hdl.wait()
 
     def stop(self):
         self._hdl.stop()
         super().stop()
+
 
 class JaprontoNonblockingApplication(japronto.Application):
 
@@ -184,7 +181,7 @@ class JaprontoNonblockingApplication(japronto.Application):
         # prevent further operations on socket in parent
         sock.close()
 
-    def wait_all(self):                
+    def wait_all(self):
         for worker in self.workers:
             worker.join()
         self.workers.clear()
@@ -192,6 +189,7 @@ class JaprontoNonblockingApplication(japronto.Application):
     def stop_all(self):
         for worker in self.workers:
             worker.terminate()
+
 
 class HttpServer:
 
@@ -218,6 +216,7 @@ class Http2Server:
 
     def wait(self):
         pass
+
 
 class HttpsServer:
 

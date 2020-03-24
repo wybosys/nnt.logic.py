@@ -86,7 +86,7 @@ class Router(r.IRouter):
             return
         trans.submit()
 
-    def config(self, cfg):    
+    def config(self, cfg):
         self._cfg = cfg
         return True
 
@@ -110,7 +110,7 @@ class Router(r.IRouter):
                 'name': '%s.%s' % (name, asnm),
                 'action': '%s.%s' % (name, asnm),
                 'comment': ap.comment,
-                'params': self.ParametersInfo(ap.clazz)
+                'params': Router.ParametersInfo(ap.clazz)
             }
             acts.append(t)
         return acts

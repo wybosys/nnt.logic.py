@@ -5,11 +5,6 @@ from ..manager import config
 from . import devops
 import types
 
-class IRouterable:
-
-    def __init__(self):
-        super().__init__()
-        self.routers = None
 
 class Routers:
 
@@ -47,14 +42,14 @@ class Routers:
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
             trans.submit()
-            return        
+            return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
             trans.submit()
-            return        
+            return
 
         # 恢复数据上下文
         await trans.collect()
@@ -75,7 +70,7 @@ class Routers:
                 if not trans.auth():
                     trans.status = STATUS.NEED_AUTH
                     trans.submit()
-                    return                
+                    return
             else:
                 # 检查devops
                 if not await self._devopscheck(trans):
@@ -83,23 +78,23 @@ class Routers:
                     trans.submit()
                     return
 
-        func = at(r, trans.call)        
+        func = at(r, trans.call)
         if type(func) != types.FunctionType:
             trans.status = STATUS.ACTION_NOT_FOUND
             trans.submit()
-            return        
+            return
 
         # 不论同步或者异步模式，默认认为是成功的，业务逻辑如果出错则再次设置status为对应的错误码
         trans.status = STATUS.OK
         try:
-            await func(trans)            
+            await func(trans)
         except Exception as err:
             if isinstance(err, ModelError):
                 trans.status = err.code
                 trans.message = err.message
             else:
                 trans.status = STATUS.EXCEPTION
-                trans.message = err.message            
+                trans.message = err.message
             trans.submit()
 
     async def listen(self, trans):
@@ -110,17 +105,17 @@ class Routers:
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
             trans.submit()
-            return        
+            return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
             trans.submit()
-            return        
+            return
 
         trans.quiet = True
-        trans.status = STATUS.OK    
+        trans.status = STATUS.OK
 
     async def unlisten(self, trans):
         trans.timeout(-1)
@@ -130,17 +125,17 @@ class Routers:
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
             trans.submit()
-            return        
+            return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
             trans.submit()
-            return        
+            return
 
         trans.quiet = True
-        trans.status = STATUS.OK    
+        trans.status = STATUS.OK
 
     # devops下的权限判断
     async def _devopscheck(self, trans):
@@ -153,20 +148,20 @@ class Routers:
             return True
 
         # 和php等一样的规则
-        if config.DEVOPS_DEVELOP:            
+        if config.DEVOPS_DEVELOP:
             skip = at(trans.params, devops.KEY_SKIPPERMISSION)
             if skip:
-                return True        
+                return True
 
         clientip = trans.info.addr
         if not devops.Permissions.allowClient(clientip):
             logger.log("设置为禁止 " + clientip + " 访问服务")
-            return False        
+            return False
 
         permid = at(trans.params, devops.KEY_PERMISSIONID)
         if not permid:
             logger.log("调用接口没有传递 permissionid")
-            return False        
+            return False
 
         cfg = await devops.Permissions.locate(permid)
         if not cfg:
@@ -174,3 +169,14 @@ class Routers:
             return False
 
         return True
+
+
+class IRouterable:
+
+    def __init__(self):
+        super().__init__()
+        self._routers: Routers = Routers()
+
+    @property
+    def routers(self) -> Routers:
+        return self._routers
