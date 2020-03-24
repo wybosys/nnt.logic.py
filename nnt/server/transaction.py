@@ -240,7 +240,7 @@ class Transaction:
                 await self.hookSubmit()
             except Exception as err:
                 logger.exception(err)
-        self.implSubmit(opt)
+        self.implSubmit(self, opt)
 
         # 只有打开了频控，并且此次是正常操作，才解锁
         if self.frqctl and self.status != STATUS.HFDENY:
@@ -257,7 +257,7 @@ class Transaction:
 
         self._outputed = True
         self._submited = True
-        self.implOutput(type, obj)
+        self.implOutput(self, type, obj)
 
     def _waitTimeout(self):
         self._timeout = time.Delayer(

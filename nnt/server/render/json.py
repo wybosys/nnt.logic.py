@@ -26,12 +26,12 @@ class Json(AbstractRender):
                 'code': trans.status
             }
             if trans.status != STATUS.OK:
-                r.message = trans.message
+                r['message'] = trans.message
             else:
-                r.data = trans.model if (
+                r['data'] = trans.model if (
                     opt and opt.raw) else cp.Output(trans.model)
-                if r.data == None and trans.model:
-                    r.data = {}
+                if r['data'] == None and trans.model:
+                    r['data'] = {}
         cmid = at(trans.params, "_cmid")
         if cmid != None:
             r["_cmid"] = cmid

@@ -393,7 +393,7 @@ class HttpServer:
             ct["Content-Encoding"] = "gzip"
         if t.responseSessionId:
             ct[RESPONSE_SID] = t.sessionId()
-        buf = t.render.render(self, opt)
+        buf = t.render.render(t, opt)
         if t.gzip:
             pass
         else:
