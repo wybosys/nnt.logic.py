@@ -283,7 +283,9 @@ class HttpServer:
             self._hdl.router.add_route(route, worker)
 
     async def start(self):
-        self._hdl.run(host=self._rest.listen, port=self._rest.port)
+        worker_num = multiprocessing.cpu_count() * 2 if config.DEVOPS else 1
+        self._hdl.run(host=self._rest.listen, port=self._rest.port,
+                      worker_num=worker_num)
         return True
 
     def wait(self):
@@ -313,7 +315,7 @@ class HttpServer:
 
         # 处理url请求
         url: str = req.path
-        logger.log(req.path)
+        # logger.log(req.path)
 
         # 支持几种不同的路由格式
         # ?action=xxx.yyy&params
