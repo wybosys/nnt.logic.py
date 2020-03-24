@@ -41,14 +41,14 @@ class Routers:
         r = at(self._routers, trans.router)
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
-            trans.submit()
+            await trans.submit()
             return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
-            trans.submit()
+            await trans.submit()
             return
 
         # 恢复数据上下文
@@ -57,7 +57,7 @@ class Routers:
         # 请求锁，实现流控的目的
         if trans.frqctl and not await trans.lock():
             trans.status = STATUS.HFDENY
-            trans.submit()
+            await trans.submit()
             return
 
         # 检查是否需要验证
@@ -69,19 +69,19 @@ class Routers:
             if trans.needAuth():
                 if not trans.auth():
                     trans.status = STATUS.NEED_AUTH
-                    trans.submit()
+                    await trans.submit()
                     return
             else:
                 # 检查devops
                 if not await self._devopscheck(trans):
                     trans.status = STATUS.PERMISSIO_FAILED
-                    trans.submit()
+                    await trans.submit()
                     return
 
         func = at(r, trans.call)
         if type(func) != types.FunctionType:
             trans.status = STATUS.ACTION_NOT_FOUND
-            trans.submit()
+            await trans.submit()
             return
 
         # 不论同步或者异步模式，默认认为是成功的，业务逻辑如果出错则再次设置status为对应的错误码
@@ -95,7 +95,7 @@ class Routers:
             else:
                 trans.status = STATUS.EXCEPTION
                 trans.message = err.message
-            trans.submit()
+            await trans.submit()
 
     async def listen(self, trans):
         trans.timeout(-1)
@@ -104,14 +104,14 @@ class Routers:
         r = at(self._routers, trans.router)
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
-            trans.submit()
+            await trans.submit()
             return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
-            trans.submit()
+            await trans.submit()
             return
 
         trans.quiet = True
@@ -124,14 +124,14 @@ class Routers:
         r = at(self._routers, trans.router)
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
-            trans.submit()
+            await trans.submit()
             return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
-            trans.submit()
+            await trans.submit()
             return
 
         trans.quiet = True

@@ -4,7 +4,7 @@ import multiprocessing
 from .server import *
 from .apiserver import *
 from .transaction import *
-from ..core import logger, app, url, time
+from ..core import logger, app, url, time, kernel
 from ..core.python import *
 from ..manager import config
 from .routers import *
@@ -147,8 +147,8 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
         self._hdl.stop()
         super().stop()
 
-    def invoke(self, params, req, rsp, ac=None):
-        self._hdl.invoke(self, params, req, rsp, ac)
+    async def invoke(self, params, req, rsp, ac=None):
+        await self._hdl.invoke(self, params, req, rsp, ac)
 
     def onBeforeInvoke(self, trans: Transaction):
         """处理请求前"""
@@ -157,7 +157,7 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
     def onAfterInvoke(self, trans: Transaction):
         pass
 
-    def doInvoke(self, t: Transaction, params, req, rsp, ac=None):
+    async def doInvoke(self, t: Transaction, params, req, rsp, ac=None):
         if req and rsp:
             t.payload = {req: req, rsp: rsp}
             t.implSubmit = self._hdl.submit
@@ -172,7 +172,7 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
         elif listen == "2":
             self._routers.unlisten(t)
         else:
-            self._routers.process(t)
+            await self._routers.process(t)
 
 
 class JaprontoNonblockingApplication(japronto.Application):
@@ -241,15 +241,19 @@ class HttpServer:
         self._hdl = JaprontoNonblockingApplication()
         self._rest = rest
 
+        async def worker(req):
+            await self._dowork(req)
+
+        # 根目录
         route = '/'
-        self._hdl.router.add_route(route, self._dowork)
+        self._hdl.router.add_route(route, worker)
 
         # 动态增加目录监听
         n = 0
         while n < 128:
             n += 1
             route += '{_p%d}/' % n
-            self._hdl.router.add_route(route, self._dowork)
+            self._hdl.router.add_route(route, worker)
 
     async def start(self):
         self._hdl.run(host=self._rest.listen, port=self._rest.port)
@@ -261,7 +265,7 @@ class HttpServer:
     def stop(self):
         self._hdl.stop_all()
 
-    def _dowork(self, req):
+    async def _dowork(self, req):
         rsp = JaprontoResponse(req)
 
         # 打开跨域支持
@@ -324,9 +328,10 @@ class HttpServer:
                 json = req.json
                 for k in json:
                     params[k] = json[k]
-        self.invoke(params, req, rsp)
 
-    def invoke(self, params, req, rsp, ac=None):
+        await self.invoke(params, req, rsp)
+
+    async def invoke(self, params, req, rsp, ac=None):
         action = at(params, "action")
         if not action:
             rsp.writeHead(400)
@@ -372,12 +377,12 @@ class HttpServer:
 
             # 处理调用
             self._rest.onBeforeInvoke(t)
-            self._rest.doInvoke(t, params, req, rsp, ac)
+            await self._rest.doInvoke(t, params, req, rsp, ac)
             self._rest.onAfterInvoke(t)
         except Exception as err:
             logger.exception(err)
             t.status = STATUS.EXCEPTION
-            t.submit()
+            await t.submit()
 
     def submit(self, t, opt: TransactionSubmitOption = None):
         pl: TransactionPayload = t.payload

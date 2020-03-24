@@ -31,23 +31,32 @@ def toJsonObject(o, default=None):
 
 def corun(func):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(func())
+    if callable(func):
+        loop.run_until_complete(func())
+    else:
+        loop.run_until_complete(func)
     loop.close()
+
 
 def toSelf(obj):
     return obj
 
+
 def toString(obj):
     return str(obj)
+
 
 def toInt(obj):
     return int(obj)
 
+
 def toDouble(obj):
     return float(obj)
 
+
 def toNumber(obj):
     return float(obj)
+
 
 def toBoolean(obj):
     return not not obj
