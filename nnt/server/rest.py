@@ -1,4 +1,6 @@
 import japronto
+import socket
+import multiprocessing
 from .server import AbstractServer
 from .transaction import Transaction, EmptyTransaction
 from ..core import logger, app, url
@@ -144,11 +146,50 @@ class Rest(AbstractServer):
         pass
 
 
+class JaprontoNonblockingApplication(japronto.Application):
+
+    def _run(self, *, host, port, worker_num=None, reloader_pid=None, debug=None):
+        self._debug = debug or self._debug
+        if self._debug and not self._log_request:
+            self._log_request = self._debug
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((host, port))
+        os.set_inheritable(sock.fileno(), True)
+
+        workers = set()
+
+        terminating = False
+
+        def stop(sig=None, frame=None):
+            nonlocal terminating
+            if reloader_pid and sig == signal.SIGHUP:
+                print('Reload request received')
+            elif not terminating:
+                terminating = True
+                print('Termination request received')
+            for worker in workers:
+                worker.terminate()
+
+        for _ in range(worker_num or 1):
+            worker = multiprocessing.Process(
+                target=self.serve,
+                kwargs=dict(sock=sock, host=host, port=port,
+                            reloader_pid=reloader_pid))
+            worker.daemon = True
+            worker.start()
+            workers.add(worker)
+
+        # prevent further operations on socket in parent
+        sock.close()
+
+
 class HttpServer:
 
     def __init__(self):
         super().__init__()
-        self._hdl = japronto.Application()
+        self._hdl = JaprontoNonblockingApplication()
 
     async def start(self, svr: Rest):
         self._hdl.run(host=svr.listen, port=svr.port)
