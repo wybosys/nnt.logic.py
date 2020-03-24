@@ -21,6 +21,7 @@ class Routers:
             logger.fatal("已经注册了一个同名的路由 %s" % obj.action)
             return
         self._routers[obj.action] = obj
+        #print("注册路由 %s" % obj.action)
 
     def find(self, id):
         return at(self._routers, id)

@@ -35,3 +35,16 @@ def get_file_content(file):
     if not os.path.exists(file):
         return ''
     return ''.join(open(file).readlines())
+
+
+class StringT:
+
+    @staticmethod
+    def Split(s: str, sep: str, skipempty: bool = True) -> [str]:
+        """ 拆分，可以选择是否去空 """
+        r = s.split(sep)
+        r0 = []
+        for e in r:
+            if e or not skipempty:
+                r0.append(e)
+        return r0

@@ -333,7 +333,7 @@ class HttpServer:
                 params[k] = v
                 i += 2
         else:
-            p = url.split('/')
+            p = StringT.Split(url, '/')
             pl = len(p)
             if pl >= 2:
                 r = p[pl - 2]
