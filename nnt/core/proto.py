@@ -1,4 +1,5 @@
 import types
+import inspect
 from .python import *
 
 # 定义标记
@@ -107,7 +108,7 @@ def model(options=None, parent=None):
             mp.enum = enum in options
             mp.constant = constant in options
             mp.hidden = hidden in options
-        mp.parent = parent    
+        mp.parent = parent
         setattr(clazz, MP_KEY, mp)
         return clazz
     return _
@@ -232,3 +233,13 @@ def IsNeedAuth(mdl) -> bool:
     """ 是否需要登陆验证 """
     mp = GetModelInfo(mdl.__class__)
     return mp.auth
+
+
+def GetAllFields(mdl) -> [str, FieldOption]:
+    fs = {}
+    for e in inspect.getmembers(mdl):
+        nm = e[0]
+        obj = e[1]
+        if isinstance(obj, FieldOption):
+            fs[nm] = obj
+    return fs

@@ -1,5 +1,6 @@
 from ..manager import config
 
+
 class IRouter:
 
     def __init__(self):
@@ -8,8 +9,10 @@ class IRouter:
         # router的标记
         self.action = None
 
-        # 接受配置文件的设置
-        self.config = None
+    def config(self, cfg) -> bool:
+        """ 接受配置文件的设置 """
+        return True
+
 
 # action可用的模式
 debug = 'debug'
@@ -22,6 +25,7 @@ devopsrelease = 'devopsrelease'
 
 # 打开频控
 frqctl = 'frqctl'
+
 
 class ActionProto:
 
@@ -59,14 +63,16 @@ class ActionProto:
         # 暴露接口
         self.expose = False
 
+
 AP_KEY = "__actionproto"
 
-# 定义router需要的model对象
-def action(model, options = None, comment = None):
+
+def action(model, options=None, comment=None):
+    """ 定义router需要的model对象 """
     def _(fun):
         ap = ActionProto()
         ap.clazz = model
-        ap.comment = comment    
+        ap.comment = comment
         if options:
             for e in options:
                 setattr(ap, e, True)
@@ -91,7 +97,15 @@ def action(model, options = None, comment = None):
         return fun
     return _
 
+
 def FindAction(target, key: str) -> ActionProto:
     if hasattr(target.__class__, AP_KEY):
         return target.__class__[AP_KEY][key]
+    return None
+
+
+def GetAllActionNames(obj) -> [str]:
+    if hasattr(obj.__class__, AP_KEY):
+        aps = obj.__class__[AP_KEY]
+        return list(aps.keys())
     return None

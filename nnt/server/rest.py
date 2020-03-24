@@ -119,7 +119,7 @@ class Rest(AbstractServer):
                     if not router:
                         logger.warn("没有找到该实例类型 %s" % e)
                         return False
-                    cfg = self.router[e]
+                    cfg = self.router[e]                    
                     if not router.config(cfg):
                         logger.warn("路由配置出错 %s" % e)
                         return False

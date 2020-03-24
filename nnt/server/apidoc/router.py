@@ -1,8 +1,9 @@
-from ...core import proto as cp, router as r, url
+from ...core import proto as cp, router as r, url, kernel
 from ...core.python import *
 from ...core.models import *
 from ..transaction import Transaction
 from ..routers import *
+
 
 class ParameterInfo:
 
@@ -38,7 +39,7 @@ class ActionInfo:
         self.name: str = None
         self.action: str = None
         self.comment: str = None
-        self.params: list[ParameterInfo] = None
+        self.params: [ParameterInfo] = None
 
 
 class RouterConfig:
@@ -47,8 +48,8 @@ class RouterConfig:
 
         def __init__(self):
             super().__init__()
-            self.router: list[str] = None
-            self.model: list[str] = None
+            self.router: [str] = None
+            self.model: [str] = None
 
     def __init__(self):
         super().__init__()
@@ -63,80 +64,84 @@ class ExportApis:
     h5g = cp.boolean(3, [cp.input, cp.optional], "生成 game.h5 游戏使用api")
     vue = cp.boolean(4, [cp.input, cp.optional], "生成 vue 项目中使用的api")
 
+
 class Router(r.IRouter):
 
     def __init__(self):
         super().__init__()
         self._cfg = None
         self.action = 'api'
-        self._page = get_file_content(url.expand("~/nnt/server/apidoc/apidoc.volt"))
+        self._page = get_file_content(
+            url.expand("~/nnt/server/apidoc/apidoc.volt"))
 
-    @cp.action(Null, [cp.expose], "文档")
+    @r.action(Null, [r.expose], "文档")
     def doc(self, trans: Transaction):
-        srv:IRouterable = trans.server
+        srv: IRouterable = trans.server
         if len(srv.routers):
             # 收集routers的信息
-            infos = r.ActionsInfo(srv.routers)
+            infos = self.ActionsInfo(srv.routers)
             # 渲染页面
-            trans.output('text/html;charset=utf-8;', this._page.render({actions: toJson(infos)}))
+            cnt = self._page.replace('{{action}}', kernel.toJson(infos))
+            trans.output('text/html;charset=utf-8;', cnt)
             return
-        trans.submit()    
+        trans.submit()
 
-    def config(self, cfg):
-        self._cfg = cfg        
+    def config(self, cfg):    
+        self._cfg = cfg
         return True
 
     @staticmethod
-    def ActionsInfo(routers: Routers)-> list[ActionInfo]:
-        r: list[ActionInfo] = []
+    def ActionsInfo(routers: Routers) -> [ActionInfo]:
+        t: [ActionInfo] = []
         for e in routers:
-            r.append(Router.RouterActions(routers[e]))
-        return r    
+            t.append(Router.RouterActions(routers[e]))
+        return t
 
     @staticmethod
-    def RouterActions(router: IRouter)-> list[ActionInfo]:
+    def RouterActions(router: r.IRouter) -> [ActionInfo]:
         name = router.action
 
         # 获得router身上的action信息以及属性列表
         asnms = r.GetAllActionNames(router)
-        r = ArrayT.Convert(as, a => {
-            let ap = FindAction(router, a);
-            let t = JsonObject<ActionInfo>();
-            t.name = t.action = name + '.' + a;
-            t.comment = ap.comment;
-            t.params = this.ParametersInfo(ap.clazz);
-            return t;
-        });
-        this._ActionInfos.set(name, r);
-        return r;
-    }
+        acts = []
+        for asnm in asnms:
+            ap = r.FindAction(router, asnm)
+            t = {
+                'name': '%s.%s' % (name, asnm),
+                'action': '%s.%s' % (name, asnm),
+                'comment': ap.comment,
+                'params': self.ParametersInfo(ap.clazz)
+            }
+            acts.append(t)
+        return acts
 
-    static ParametersInfo(clz: AnyClass): ParameterInfo[] {
-        let t = new clz();
-        let fps = GetAllFields(t);
-        return ObjectT.Convert(fps, (fp, name) => {
-            let t = JsonObject<ParameterInfo>();
-            t.name = name;
-            t.array = fp.array;
-            t.string = fp.string;
-            t.integer = fp.integer;
-            t.double = fp.double;
-            t.number = fp.number;
-            t.intfloat = fp.intfloat;
-            t.boolean = fp.boolean;
-            t.file = fp.file;
-            t.enum = fp.enum;
-            t.array = fp.array;
-            t.map = fp.map;
-            t.object = fp.json;
-            t.optional = fp.optional;
-            t.index = fp.id;
-            t.input = fp.input;
-            t.output = fp.output;
-            t.comment = fp.comment;
-            t.valtyp = fp.valtype;
-            t.keytyp = fp.keytype;
-            return t;
-        });
-    }
-}
+    @staticmethod
+    def ParametersInfo(clz):
+        ps = []
+        infos = cp.GetAllFields(clz)
+        for nm in infos:
+            info: cp.FieldOption = infos[nm]
+            t = {
+                'name': nm,
+                'array': info.array,
+                'string': info.string,
+                'integer': info.integer,
+                'double': info.double,
+                'number': info.number,
+                'intfloat': info.intfloat,
+                'boolean': info.boolean,
+                'file': info.file,
+                'enum': info.enum,
+                'array': info.array,
+                'map': info.map,
+                'object': info.json,
+                'optional': info.optional,
+                'index': info.id,
+                'input': info.input,
+                'output': info.output,
+                'comment': info.comment,
+                'valtyp': info.valtype,
+                'keytyp': info.keytype
+            }
+            ps.append(t)
+        return ps
