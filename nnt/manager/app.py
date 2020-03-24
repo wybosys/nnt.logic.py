@@ -157,8 +157,7 @@ class App(app.App):
         await loggers.Stop();
         await containers.Stop();
 
-        RunHooks(STOPPED);
-        
+        RunHooks(STOPPED);        
         return super().stop()
 
 # 用于挂住系统进程的钩子
