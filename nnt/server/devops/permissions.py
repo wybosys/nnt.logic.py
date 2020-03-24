@@ -2,8 +2,11 @@ from ...store import KvRedis
 from ...core.kernel import *
 from ...core import logger
 from ...manager import config, app
-import netaddr, json, os
+import netaddr
+import json
+import os
 import asyncio.futures as futures
+
 
 class _Permissions:
 
@@ -32,13 +35,14 @@ class _Permissions:
                 jsobj = json.load(open('/work/run/permission.cfg'))
                 self._id = jsobj['id']
             else:
-                logger.warn("没有获取到permissionid")                    
-        return self._id    
+                logger.warn("没有获取到permissionid")
+        return self._id
 
     async def locate(self, permid):
         if not self._db:
             return None
         fur = futures.Future()
+
         def _(res):
             fur.set_result(toJsonObject(res))
             fur.done()
@@ -47,14 +51,17 @@ class _Permissions:
     def allowClient(self, clientip):
         return True
 
+
 Permissions = None
+
 
 def _():
     global Permissions
     if config.DEVOPS:
         Permissions = _Permissions()
 
-app.Hook(app.STARTED, _)
+
+# app.Hook(app.STARTED, _)
 
 KEY_PERMISSIONID = "_permissionid"
 KEY_SKIPPERMISSION = "_skippermission"
