@@ -290,3 +290,14 @@ class EmptyTransaction(Transaction):
 
     def auth(self) -> bool:
         return False
+
+
+def ConsoleSubmit(self):
+    cb = self.params["__callback"]
+    cb(self)
+
+
+def ConsoleOutput(self, type: str, obj):
+    cb = self.params["__callback"]
+    self.payload = obj
+    cb(self)

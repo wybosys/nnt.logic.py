@@ -2,6 +2,7 @@ from ..config import NodeIsEnable
 from ..core import app, logger
 from ..core.models import STATUS
 from ..server.transaction import EmptyTransaction
+from asyncio import futures
 
 _servers = {}
 
@@ -110,3 +111,13 @@ def ImplCall(srvid: str, action: str, params, cb, ac=None):
     params["__callback"] = ImpCallCalback(srvid, action, cb)
 
     srv.invoke(params, None, None, ac)
+
+
+async def Call(srvid: str, action: str, params, ac=None):
+    f = futures.Future()
+
+    def cb(t):
+        f.set_result(t)
+        f.done()
+    ImplCall(srvid, action, params, cb, ac)
+    return f
