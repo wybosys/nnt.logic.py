@@ -361,8 +361,10 @@ class HttpServer:
                     t.info.addr = req.remote_addr
 
             # 绑定解析器
-            t.parser = FindParser(params['_pfmt'])  # _pfmt parser format 预留关键字
-            t.render = FindRender(params['_rfmt'])  # _ofmt render format 预留关键字
+            # _pfmt parser format 预留关键字
+            t.parser = FindParser(at(params, '_pfmt'))
+            # _ofmt render format 预留关键字
+            t.render = FindRender(at(params, '_rfmt'))
 
             # 处理调用
             self._rest.onBeforeInvoke(t)
