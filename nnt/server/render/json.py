@@ -10,7 +10,7 @@ class Json(AbstractRender):
 
     def __init__(self):
         super().__init__()
-        type = 'application/json'
+        self.type = 'application/json'
 
     def render(self, trans: Transaction, opt: TransactionSubmitOption) -> str:
         r = None

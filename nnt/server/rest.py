@@ -13,6 +13,7 @@ from .render import *
 from .parser import *
 from .file import RespFile
 from asyncio import futures
+import traceback
 
 
 class RestResponseData:
@@ -243,6 +244,7 @@ class JaprontoResponse:
             self._headers[k] = d[k]
 
     def send(self):
+        print(self.body, self.raw, self.code, self._headers)
         self._obj = self._req.Response(
             code=self.code,
             headers=self._headers,
@@ -305,7 +307,7 @@ class HttpServer:
                               req.headers["Access-Control-Request-Headers"])
             if at(req.headers, "Access-Control-Request-Method") == "POST":
                 rsp.setHeader("Content-Type", "multipart/form-data")
-            rsp.writeHead(204)
+            rsp.code = 204
             rsp.send()
             return rsp.promise
 
