@@ -30,13 +30,13 @@ class Json(AbstractRender):
             else:
                 r['data'] = trans.model if (
                         opt and opt.raw) else cp.Output(trans.model)
-                if r['data'] == None and trans.model:
+                if r['data'] is None and trans.model:
                     r['data'] = {}
         cmid = at(trans.params, "_cmid")
-        if cmid != None:
+        if cmid is not None:
             r["_cmid"] = cmid
         listen = at(trans.params, "_listening")
-        if listen != None:
+        if listen is not None:
             r["_listening"] = listen
         s = toJson(r)
         return s

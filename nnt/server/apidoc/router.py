@@ -40,16 +40,13 @@ class ActionInfo:
 
 
 class RouterConfig:
-    class Export:
-
-        def __init__(self):
-            super().__init__()
-            self.router: [str] = None
-            self.model: [str] = None
 
     def __init__(self):
         super().__init__()
-        self.export = Export()
+        self.export = {
+            'router': None,
+            'model': None
+        }
 
 
 @cp.model

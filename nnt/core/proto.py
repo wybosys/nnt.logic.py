@@ -415,7 +415,7 @@ def Output(mdl) -> dict:
     """ 收集model的输出 """
     if not mdl:
         return None
-    fps = GetAllFields(mdl)
+    fps = GetAllFields(mdl.__class__)
     if not fps:
         return None
     r = {}
@@ -424,6 +424,9 @@ def Output(mdl) -> dict:
         if not fp.output or not hasattr(mdl, fk):  # 不能和客户端一样删除掉对fk的判断，服务端会使用model直接扔到数据库中查询，去掉后会生成初始值查询字段
             continue
         val = getattr(mdl, fk)
+        if val == fp:
+            # python定义field的问题，如果mdl中设置了val则val不会=fp，否则==fp
+            continue
         if fp.valtype:
             if fp.array:
                 arr = []

@@ -218,21 +218,26 @@ class JaprontoResponse:
         self.code = 200
         self.body = None
         self.raw = None
+        self.mime = None
         self._f = futures.Future()
         self._obj = None
 
     def setHeader(self, k, v):
-        self._headers[k] = v
+        if k == 'Content-Type':
+            self.mime = v
+        else:
+            self._headers[k] = v
 
     def setHeaders(self, d):
         for k in d:
-            self._headers[k] = d[k]
+            self.setHeader(k, d[k])
 
     def send(self):
         # print([self.body, self.raw, self.code, self._headers])
         self._obj = self._req.Response(
             code=self.code,
             headers=self._headers,
+            mime_type=self.mime,
             text=self.body,
             body=self.raw
         )
