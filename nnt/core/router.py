@@ -83,10 +83,10 @@ def action(mdlclz, options=None, comment=None):
                 setattr(ap, e, True)
 
             # options默认为空代表开放，其他情形检测环境参数
-            pas = debug in options or develop in options or local in options or devops in options or devopsdevelop in options or devopsrelease in options
+            optcheck = debug in options or develop in options or local in options or devops in options or devopsdevelop in options or devopsrelease in options
 
             # 检测环境
-            if pas:
+            if optcheck:
                 pas = False
                 if not pas and ap.debug and config.DEBUG:
                     pas = True

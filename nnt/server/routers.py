@@ -4,6 +4,7 @@ from ..core.python import *
 from ..manager import config
 from . import devops
 import types
+from .transaction import Transaction
 
 
 class Routers:
@@ -35,7 +36,7 @@ class Routers:
     def toArray(self):
         return list(self._routers.values())
 
-    async def process(self, trans):
+    async def process(self, trans: Transaction):
         ac = trans.ace
 
         # 查找router
