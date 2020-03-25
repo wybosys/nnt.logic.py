@@ -166,16 +166,10 @@ class App(app.App):
 # 处理entry的url转换
 url.RegisterScheme("entry",
                    lambda body:
-                   App.shared().entryDir + body
-                   )
-
-# 处理clientSDK的url转换
-url.RegisterScheme("sdk",
-                   lambda body:
-                   url.home() + "/src/" + body
+                   url.home() + '/' + body
                    )
 
 url.RegisterScheme("cache",
                    lambda body:
-                   config.CACHE + "/" + body
+                   config.CACHE + '/' + body
                    )

@@ -1,3 +1,6 @@
+from ashes import AshesEnv
+
+from ..file import RespFile
 from ..routers import *
 from ...core import router as r, url, kernel, devops, app, proto as cp
 
@@ -49,12 +52,17 @@ class RouterConfig:
         }
 
 
-@cp.model
+@cp.model()
 class ExportApis:
     node = cp.boolean(1, [cp.input, cp.optional], "生成 logic.node 使用的api")
     php = cp.boolean(2, [cp.input, cp.optional], "生成 logic.php 使用的api")
     h5g = cp.boolean(3, [cp.input, cp.optional], "生成 game.h5 游戏使用api")
     vue = cp.boolean(4, [cp.input, cp.optional], "生成 vue 项目中使用的api")
+
+
+# 预先准备渲染模板
+DIR_TEMPLATES = os.path.dirname(__file__)
+TEMPLATES = AshesEnv([DIR_TEMPLATES])
 
 
 class Router(r.IRouter):
@@ -162,89 +170,114 @@ class Router(r.IRouter):
             sp = params['domain'].split('/')
             params['namespace'] = sp[0].capitalize() + '\\' + sp[1].capitalize()
 
-        for each in ats(self._cfg, 'export', 'model', []):
-            clz = app.App.shared().requirePath(url.expand(each))
-            if not cp.IsModel(clz):
-                logger.log("跳过生成 %s" % each)
-                continue
+        for each in ats(self._cfg, ['export', 'model'], []):
+            modu = app.App.shared().requireModule(each)
+            for ec in inspect.getmembers(modu):
+                _, clz = ec
+                if not cp.IsModel(clz):
+                    logger.log("跳过生成 %s" % each)
+                    continue
 
-            name: str = clz.__name__
-            mp = cp.GetModelInfo(clz)
-            if mp.hidden:
-                continue
-            if mp.enum:
-                em = {
-                    'name': name,
-                    'defs': []
-                }
-                params['enums'].append(em)
-                # 枚举得每一项定义都是静态的，所以可以直接遍历
-                for each in inspect.getmembers(clz):
-                    k, v = each
-                    if not k.startswith('_'):
-                        em['defs'].append({
-                            'name': k,
-                            'value': v
+                name: str = clz.__name__
+                mp = cp.GetModelInfo(clz)
+                if mp.hidden:
+                    continue
+                if mp.enum:
+                    em = {
+                        'name': name,
+                        'defs': []
+                    }
+                    params['enums'].append(em)
+                    # 枚举得每一项定义都是静态的，所以可以直接遍历
+                    for each in inspect.getmembers(clz):
+                        k, v = each
+                        if not k.startswith('_'):
+                            em['defs'].append({
+                                'name': k,
+                                'value': v
+                            })
+                elif mp.constant:
+                    for each in inspect.getmembers(clz):
+                        k, v = each
+                        params['consts'].append({
+                            'name': name.capitalize() + "_" + k.capitalize(),
+                            'value': cp.Output(v)
                         })
-            elif mp.constant:
-                for each in inspect.getmembers(clz):
-                    k, v = each
-                    params['consts'].append({
-                        'name': name.capitalize() + "_" + k.capitalize(),
-                        'value': cp.Output(v)
-                    })
-            else:
-                # 判断是否有父类
-                clazz = {
-                    'name': name,
-                    'super': mp.parent.__name__ if mp.parent else "ApiModel",
-                    'fields': []
-                }
-                params['clazzes'].append(clazz)
-                # 构造临时对象来获得fields得信息                
-                fps = cp.GetAllOwnFields(clz)
-                for key in fps:
-                    fp = fps[key]
-                    if fp.id <= 0:
-                        logger.warn("Model的 Field 不能 <=0 %s" % (name + "." + key)
-                        continue
-                    if not fp.input and not fp.output:
-                        continue
-                    typ = cp.FpToTypeDef(fp)
-                    deco = None
-                    if m.php:
-                        deco = cp.FpToDecoDefPHP(fp)
-                    else:
-                        deco = cp.FpToDecoDef(fp, "Model.")
-                    clazz['fields'].append({
-                        'name': key,
-                        'type': typ,
-                        'optional': fp.optional,
-                        'file': fp.file,
-                        'enum': fp.enum,
-                        'input': fp.input,
-                        'deco': deco
-                    })
+                else:
+                    # 判断是否有父类
+                    clazz = {
+                        'name': name,
+                        'super': mp.parent.__name__ if mp.parent else "ApiModel",
+                        'fields': []
+                    }
+                    params['clazzes'].append(clazz)
+                    # 构造临时对象来获得fields得信息
+                    fps = cp.GetAllOwnFields(clz)
+                    for key in fps:
+                        fp = fps[key]
+                        if fp.id <= 0:
+                            logger.warn("Model的 Field 不能 <=0 %s" % (name + "." + key))
+                            continue
+                        if not fp.input and not fp.output:
+                            continue
+                        typ = cp.FpToTypeDef(fp)
+                        deco = None
+                        if m.php:
+                            deco = cp.FpToDecoDefPHP(fp)
+                        else:
+                            deco = cp.FpToDecoDef(fp, "Model.")
+                        clazz['fields'].append({
+                            'name': key,
+                            'type': typ,
+                            'optional': fp.optional,
+                            'file': fp.file,
+                            'enum': fp.enum,
+                            'input': fp.input,
+                            'deco': deco
+                        })
 
             # 遍历所有接口，生成接口段
-            routers = []
-            for e in ats(self._cfg, 'export', 'router', []):
-                clz = app.App.shared().requirePath(url.expand(e))
-                if type(clz) != type:
-                    continue
-                ass = r.GetAllActions(clz)
-                router = clz()
-                for name in ass:
-                    ap: r.ActionProto = ass[name]
-                    d = {}
-                    d['name'] = router.action.capitalize() + name.capitalize()
-                    d['action'] = router.action + "." + name
-                    cn = ap.clazz.__name__
-                    if m.vue or m.node:
-                        d['type'] = cn
-                    elif m.php:
-                        d['type'] = 'M' + cn
-                    else:
-                        d['type'] = "models." + cn
-                    d['comment'] = ap.comment
-                    params['routers'].append(d)
+            for e in ats(self._cfg, ['export', 'router'], []):
+                modu = app.App.shared().requireModule(e)
+                for ec in inspect.getmembers(modu):
+                    _, clz = ec
+                    if type(clz) != type:
+                        continue
+                    ass = r.GetAllActions(clz)
+                    router = clz()
+                    for name in ass:
+                        ap: r.ActionProto = ass[name]
+                        d = {}
+                        d['name'] = router.action.capitalize() + name.capitalize()
+                        d['action'] = router.action + "." + name
+                        cn = ap.clazz.__name__
+                        if m.vue or m.node:
+                            d['type'] = cn
+                        elif m.php:
+                            d['type'] = 'M' + cn
+                        else:
+                            d['type'] = "models." + cn
+                        d['comment'] = ap.comment
+                        params['routers'].append(d)
+
+            # 渲染模板
+            tpl = 'apis.dust'
+            if m.node:
+                tpl = "apis-node.dust"
+            elif m.h5g:
+                tpl = "apis-h5g.dust"
+            elif m.vue:
+                tpl = "apis-vue.dust"
+            elif m.php:
+                tpl = "apis-php.dust"
+            out = TEMPLATES.render(tpl, params)
+            # 需要加上php的头
+            if m.php:
+                out = "<?php\n" + out
+            apifile = params['domain'].replace('/', '-') + '-apis'
+            if m.php:
+                apifile += ".php"
+            else:
+                apifile += ".ts"
+            # 输出到客户端
+            trans.output('text/plain', RespFile.Plain(out).asDownload(apifile))

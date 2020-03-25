@@ -18,15 +18,17 @@ def at(any, idx, default=None):
             return default
 
 
-def ats(any, *args, default=None):
-    t = at(any, args[0], None)
-    if not t:
-        return ats(any, args[1:], default)
+def ats(any, subs: list, default=None):
+    if not subs:
+        return any
+    t = at(any, subs[0], None)
+    if t:
+        return ats(t, subs[1:], default)
     return default
 
 
 def atpath(any, path: str, default=None):
-    return ats(any, *path.split('.'), default)
+    return ats(any, path.split('.'), default)
 
 
 def delete(any, idx):

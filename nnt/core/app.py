@@ -56,11 +56,17 @@ class App(ss.SObject):
             func = getattr(mod, clazz)
             return func
         except Exception as err:
-            termcolor.cprint("导入库失败 %s" % entry, 'red')
+            termcolor.cprint("导入实体失败 %s" % entry, 'red')
             logger.exception(err)
         return None
 
-    def requirePath(self, path: str) -> object:
+    def requireModule(self, module) -> object:
+        try:
+            mod = importlib.import_module(module)
+            return mod
+        except Exception as err:
+            termcolor.cprint("导入库失败 %s" % module, 'red')
+            logger.exception(err)
         return None
 
     def containsEntry(self, entry) -> bool:

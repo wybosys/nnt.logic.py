@@ -179,7 +179,7 @@ class Transaction:
 
     def modelize(self, r):
         """恢复到model, 返回错误码"""
-        ap = FindAction(r, self.call)
+        ap = FindAction(r.__class__, self.call)
         if not ap:
             return STATUS.ACTION_NOT_FOUND
         self.frqctl = ap.frqctl

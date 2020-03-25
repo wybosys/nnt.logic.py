@@ -1,49 +1,54 @@
 {
-    "config": {
-        "sidexpire": 86400,
-        "cidexpire": 600,
-        "cache": "cache",
-        "https": false,
-        "deskey": "joi>:90",
-        "cluster": 1
-    },
-    "server": [{
-            "id": "sample",
-            "listen": "*",
-            "port": 8090,
-            "entry": "app.SampleRest",
-            "enable": "local",
-            "router": {
-                "nnt.server.apidoc.Router": {
-                    "export": {
-                        "router": [
-                            "entry://app/router/sample"
-                        ],
-                        "model": [
-                            "entry://nnt/core/models",
-                            "entry://app/model/sample"
-                        ]
-                    }
-                }
-            }
-        },
-        {
-            "id": "sample",
-            "listen": "*",
-            "port": 80,
-            "entry": "app.SampleRest",
-            "enable": "devops-develop,devops-release"
+  "config": {
+    "sidexpire": 86400,
+    "cidexpire": 600,
+    "cache": "cache",
+    "https": false,
+    "deskey": "joi>:90",
+    "cluster": 1
+  },
+  "server": [
+    {
+      "id": "sample",
+      "listen": "*",
+      "port": 8090,
+      "entry": "app.SampleRest",
+      "enable": "local",
+      "router": {
+        "nnt.server.apidoc.Router": {
+          "export": {
+            "router": [
+              "app.router.sample"
+            ],
+            "model": [
+              "nnt.core.models",
+              "app.model.sample"
+            ]
+          }
         }
-    ],
-    "dbms": [{
-        "id": "localdb",
-        "entry": "nnt.store.KvLevel",
-        "file": "cache://nnt.logic.sample.localdb"
-    }],
-    "logger": [{
-        "id": "console",
-        "filter": "all",
-        "entry": "nnt.logger.Console",
-        "enable": "local"
-    }]
+      }
+    },
+    {
+      "id": "sample",
+      "listen": "*",
+      "port": 80,
+      "entry": "app.SampleRest",
+      "enable": "devops-develop,devops-release"
+    }
+  ],
+  "dbms": [
+    {
+      "id": "localdb",
+      "entry": "nnt.store.KvLevel",
+      "file": "cache://nnt.logic.sample.localdb"
+    }
+  ],
+  "logger": [
+    {
+      "id": "console",
+      "filter": "all",
+      "entry": "nnt.logger.Console",
+      "enable": "local"
+    }
+  ]
 }
