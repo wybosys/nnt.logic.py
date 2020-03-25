@@ -1,6 +1,4 @@
-import types
 import inspect
-from .python import *
 
 # 定义标记
 input = 0
@@ -19,8 +17,7 @@ double_t = float
 boolean_t = bool
 
 
-class number_t:
-    pass
+class number_t: pass
 
 
 class ModelOption:
@@ -62,29 +59,29 @@ class FieldOption:
         super().__init__()
 
         # 唯一序号，后续类似pb的协议会使用id来做数据版本兼容
-        self.id = 0
+        self.id: int = 0
 
         # 可选
-        self.optional = False
+        self.optional: bool = False
 
         # 读取控制
-        self.input = False
-        self.output = False
+        self.input: bool = False
+        self.output: bool = False
 
         # 类型标签
-        self.array = False
-        self.map = False
-        self.multimap = False
-        self.string = False
-        self.integer = False
-        self.double = False
-        self.number = False
-        self.boolean = False
-        self.enum = False
-        self.file = False
-        self.json = False
-        self.filter = False
-        self.intfloat = None
+        self.array: bool = False
+        self.map: bool = False
+        self.multimap: bool = False
+        self.string: bool = False
+        self.integer: bool = False
+        self.double: bool = False
+        self.number: bool = False
+        self.boolean: bool = False
+        self.enum: bool = False
+        self.file: bool = False
+        self.json: bool = False
+        self.filter: bool = False
+        self.intfloat: int = None
 
         # 关联类型
         self.keytype = None
@@ -95,6 +92,7 @@ class FieldOption:
 
         # 有效性检查函数, FieldValidProc 或者 函数
         self.valid = None
+        self.valid_result: int = None
 
 
 MP_KEY = "__modelproto"
@@ -111,6 +109,7 @@ def model(options=None, parent=None):
         mp.parent = parent
         setattr(clazz, MP_KEY, mp)
         return clazz
+
     return _
 
 
@@ -235,9 +234,9 @@ def IsNeedAuth(mdl) -> bool:
     return mp.auth
 
 
-def GetAllFields(mdl) -> [str, FieldOption]:
+def GetAllFields(clazz) -> [str, FieldOption]:
     fs = {}
-    for e in inspect.getmembers(mdl):
+    for e in inspect.getmembers(clazz):
         nm = e[0]
         obj = e[1]
         if isinstance(obj, FieldOption):

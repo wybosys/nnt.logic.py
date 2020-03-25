@@ -1,8 +1,8 @@
-from ..core.models import *
 from ..core import time, logger
+from ..core.models import *
+from ..core.proto import IsNeedAuth
 from ..core.python import *
 from ..core.router import FindAction
-from ..core.proto import IsNeedAuth
 from ..manager import config
 
 RESPONSE_SID = "X-NntLogic-SessionId"
@@ -188,7 +188,7 @@ class Transaction:
         clz = ap.clazz
 
         # 检查输入参数
-        sta = self.parser.checkInput(clz.prototype, self.params)
+        sta = self.parser.checkInput(clz, self.params)
         if sta != STATUS.OK:
             return sta
 

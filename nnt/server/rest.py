@@ -1,19 +1,17 @@
-import japronto
-import socket
 import multiprocessing
-from .server import *
-from .apiserver import *
-from .transaction import *
-from ..core import logger, app, url, time, kernel, codec
-from ..core.python import *
-from ..manager import config
-from .routers import *
-import inspect
-from .render import *
-from .parser import *
-from .file import RespFile
+import socket
 from asyncio import futures
-import traceback
+
+import japronto
+
+from .apiserver import *
+from .file import RespFile
+from .parser import *
+from .render import *
+from .routers import *
+from .server import *
+from .transaction import *
+from ..core import app, time, codec
 
 
 class RestResponseData:
@@ -68,7 +66,7 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
 
     def __init__(self):
         super().__init__()
-        self. _hdl = None
+        self._hdl = None
 
     def instanceTransaction(self) -> Transaction:
         """ 用来构造请求事物的类型 """
@@ -189,19 +187,6 @@ class JaprontoNonblockingApplication(japronto.Application):
         os.set_inheritable(sock.fileno(), True)
 
         self.workers = set()
-
-        terminating = False
-
-        def stop(sig=None, frame=None):
-            nonlocal terminating
-            if reloader_pid and sig == signal.SIGHUP:
-                print('Reload request received')
-            elif not terminating:
-                terminating = True
-                print('Termination request received')
-            for worker in self.workers:
-                worker.terminate()
-
         for _ in range(worker_num or 1):
             worker = multiprocessing.Process(
                 target=self.serve,
@@ -244,7 +229,7 @@ class JaprontoResponse:
             self._headers[k] = d[k]
 
     def send(self):
-        #print([self.body, self.raw, self.code, self._headers])
+        # print([self.body, self.raw, self.code, self._headers])
         self._obj = self._req.Response(
             code=self.code,
             headers=self._headers,
@@ -329,7 +314,7 @@ class HttpServer:
             i = 0
             while i < pl:
                 k = p[i]
-                v = p[i+1]
+                v = p[i + 1]
                 params[k] = v
                 i += 2
         else:
@@ -458,7 +443,7 @@ class HttpServer:
                 pl.rsp.setHeader('Content-Description', "File Transfer")
                 pl.rsp.setHeader('Content-Transfer-Encoding', 'binary')
             pl.rsp.setHeaders(ct)
-            if self.gzip and not self.compressed:
+            if t.gzip and not t.compressed:
                 obj.readStream.pipe(zlib.createGzip()).pipe(pl.rsp)
             else:
                 obj.readStream.pipe(pl.rsp)

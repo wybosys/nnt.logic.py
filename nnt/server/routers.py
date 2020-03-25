@@ -33,9 +33,6 @@ class Routers:
     def __iter__(self):
         return self._routers.__iter__()
 
-    def toArray(self):
-        return list(self._routers.values())
-
     async def process(self, trans: Transaction):
         ac = trans.ace
 
