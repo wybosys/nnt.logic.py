@@ -87,6 +87,7 @@ class Routers:
             else:
                 trans.status = STATUS.EXCEPTION
                 trans.message = str(err)
+            logger.error(err)
             trans.submit()
 
     async def listen(self, trans):

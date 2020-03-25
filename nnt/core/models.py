@@ -1,3 +1,5 @@
+import sys
+
 from . import proto as cp
 
 
@@ -65,6 +67,7 @@ class ModelError(Exception):
         super().__init__()
         self.code = code
         self.msg = msg
+        self.__traceback__ = sys.gettrace()
 
 
 PAGED_LIMIT = 5000

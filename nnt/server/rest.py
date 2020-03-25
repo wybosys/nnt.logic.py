@@ -167,9 +167,9 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
 
         listen = at(params, '_listen')
         if listen == "1":
-            self._routers.listen(t)
+            await self._routers.listen(t)
         elif listen == "2":
-            self._routers.unlisten(t)
+            await self._routers.unlisten(t)
         else:
             await self._routers.process(t)
 

@@ -1,6 +1,10 @@
+import traceback
+
+import termcolor
+
 from .logger import AbstractLogger
 from ..manager import config
-import traceback, termcolor
+
 
 class Console(AbstractLogger):
 
@@ -16,6 +20,11 @@ class Console(AbstractLogger):
 
     def fatal(self, msg, status=None):
         termcolor.cprint(msg, 'red')
+
+    def error(self, e: Exception, status=None):
+        tb = e.__traceback__
+        print(''.join(traceback.format_tb(tb)))
+        termcolor.cprint(e, 'red')
 
     def exception(self, err: Exception, status=None):
         tb = err.__traceback__

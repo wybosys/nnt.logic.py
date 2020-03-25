@@ -1,10 +1,11 @@
-from ..core import logger
-from ..logger.logger import Filter
 from ..config.config import NodeIsEnable
+from ..core import logger
 from ..core.app import App
+from ..logger.logger import Filter
 from ..manager import config
 
 _loggers = []
+
 
 class TYPE:
     LOG = 0
@@ -12,9 +13,11 @@ class TYPE:
     INFO = 2
     FATAL = 3
     EXCEPTION = 4
+    ERROR = 5
+
 
 def output(msg, filter, typ):
-    for e in _loggers:    
+    for e in _loggers:
         if e.isAllow(filter):
             if typ == TYPE.LOG:
                 e.log(msg)
@@ -24,53 +27,81 @@ def output(msg, filter, typ):
                 e.warn(msg)
             elif typ == TYPE.EXCEPTION:
                 e.exception(msg)
+            elif typ == TYPE.ERROR:
+                e.error(msg)
             else:
-                e.fatal(msg)        
+                e.fatal(msg)
+
 
 def _(msg):
     if len(_loggers):
         output(msg, Filter.LOG, TYPE.LOG)
     else:
         print(msg)
+
+
 logger.log = _
+
 
 def _(msg):
     if len(_loggers):
         output(msg, Filter.WARN, TYPE.WARN)
     else:
         print(msg)
+
+
 logger.warn = _
+
 
 def _(msg):
     if len(_loggers):
         output(msg, Filter.INFO, TYPE.INFO)
     else:
         print(msg)
+
+
 logger.info = _
+
 
 def _(msg):
     if len(_loggers):
         output(msg, Filter.FATAL, TYPE.FATAL)
     else:
         print(msg)
+
+
 logger.fatal = _
 
-def _(msg):
+
+def _(e):
     if len(_loggers):
-        output(msg, Filter.EXCEPTION, TYPE.EXCEPTION)
+        output(e, Filter.ERROR, TYPE.ERROR)
     else:
-        print(msg)
+        print(e)
+
+
+logger.error = _
+
+
+def _(e):
+    if len(_loggers):
+        output(e, Filter.EXCEPTION, TYPE.EXCEPTION)
+    else:
+        print(e)
+
+
 logger.exception = _
+
 
 async def Start(cfg):
     if len(cfg):
-        for e in cfg:            
+        for e in cfg:
             if not NodeIsEnable(e):
                 continue
             if 'entry' not in e:
                 continue
 
-            t = App.shared().instanceEntry(e['entry'])            
+            t = App.shared().instanceEntry(e['entry'])
             if not t:
                 continue
 
@@ -92,6 +123,7 @@ async def Start(cfg):
             _loggers.append(t)
     else:
         Stop()
+
 
 def Stop():
     _loggers.clear()

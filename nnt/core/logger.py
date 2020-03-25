@@ -12,23 +12,23 @@ class Level:
     EMERGENCY = 0
 
 
-def log(str):
-    print(str)
+def log(s):
+    print(s)
 
 
-def warn(str):
-    print(str)
+def warn(s):
+    print(s)
 
 
-def info(str):
-    print(str)
+def info(s):
+    print(s)
 
 
-def fatal(str):
-    print(str)
+def fatal(s):
+    print(s)
 
 
-def exception(e):    
+def exception(e):
     print(e)
 
 
