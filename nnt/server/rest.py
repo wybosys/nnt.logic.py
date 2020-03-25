@@ -433,20 +433,20 @@ class HttpServer:
                 if pl.req.headers["If-Modified-Since"]:
                     # 判断下请求的文件有没有改变
                     if obj.stat.mtime.toUTCString() == pl.req.headers["If-Modified-Since"]:
-                        pl.rsp.writeHead(304, "Not Modified")
-                        pl.rsp.end()
+                        pl.rsp.code = 304
+                        pl.rsp.body = 'Not Modified'
+                        pl.rsp.send()
                         return
                 ct["Expires"] = obj.expire.toUTCString()
                 ct["Cache-Control"] = "max-age=" + time.WEEK
                 ct["Last-Modified"] = obj.stat.mtime.toUTCString()
             # 如果是提供下载
             if obj.download:
-                pl.rsp.setHeader('Accept-Ranges', 'bytes')
-                pl.rsp.setHeader('Accept-Length', obj.length)
-                pl.rsp.setHeader('Content-Disposition',
-                                 'attachment; filename=' + obj.file)
-                pl.rsp.setHeader('Content-Description', "File Transfer")
-                pl.rsp.setHeader('Content-Transfer-Encoding', 'binary')
+                ct['Accept-Ranges'] = 'bytes'
+                ct['Accept-Length'] = obj.length
+                ct['Content-Disposition'] = 'attachment; filename=' + obj.file
+                ct['Content-Description'] = "File Transfer"
+                ct['Content-Transfer-Encoding'] = 'binary'
             if t.gzip and not t.compressed:
                 obj = codec.gzip_compress(obj.buffer)
             else:
