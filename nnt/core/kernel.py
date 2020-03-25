@@ -43,23 +43,47 @@ def toSelf(obj):
     return obj
 
 
-def toString(obj):
+def toString(obj, default=''):
+    if obj is None:
+        return default
+    typ = type(obj)
+    if typ == list or typ == map:
+        return toJson(typ, default)
     return str(obj)
 
 
-def toInt(obj):
-    return int(obj)
+def toInt(obj, default=0):
+    try:
+        return int(obj)
+    except:
+        return default
 
 
-def toDouble(obj):
-    return float(obj)
+def toDouble(obj, default=0):
+    try:
+        return float(obj)
+    except:
+        return default
 
 
-def toNumber(obj):
-    return float(obj)
+def toNumber(obj, default=0):
+    if obj is None:
+        return default
+    if type(obj) == str:
+        return toDouble(obj, default) if '.' in obj else toInt(obj, default)
+    try:
+        return float(obj)
+    except:
+        return default
 
 
 def toBoolean(obj):
+    if obj is None:
+        return False
+    if obj == "true":
+        return True
+    if obj == "false":
+        return False
     return not not obj
 
 

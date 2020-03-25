@@ -427,7 +427,6 @@ class HttpServer:
         if t.gzip:
             ct["Content-Encoding"] = "gzip"
         if isinstance(obj, RespFile):
-            ct["Content-Length"] = obj.length
             if obj.cachable:
                 # 只有文件对象才可以增加过期控制
                 if pl.req.headers["If-Modified-Since"]:
@@ -443,7 +442,6 @@ class HttpServer:
             # 如果是提供下载
             if obj.download:
                 ct['Accept-Ranges'] = 'bytes'
-                ct['Accept-Length'] = obj.length
                 ct['Content-Disposition'] = 'attachment; filename=' + obj.file
                 ct['Content-Description'] = "File Transfer"
                 ct['Content-Transfer-Encoding'] = 'binary'
