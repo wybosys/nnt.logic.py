@@ -1,5 +1,5 @@
 from ..routers import *
-from ...core import router as r, url, kernel, devops
+from ...core import router as r, url, kernel, devops, app
 
 
 class ParameterInfo:
@@ -157,3 +157,10 @@ class Router(r.IRouter):
             'consts': [],
             'routers': []
         }
+
+        if m.php:
+            sp = params['domain'].split('/')
+            params['namespace'] = sp[0].capitalize() + '\\' + sp[1].capitalize()
+
+        for each in ats(self._cfg, 'export', 'model'):
+            mod = app.App.shared().requireEntry(each)

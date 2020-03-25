@@ -1,7 +1,8 @@
 import importlib
-import termcolor
 import signal
-from ..core import kernel
+
+import termcolor
+
 from . import signals as ss, logger
 
 kSignalAppStarted = '::nn::app::started'
@@ -9,11 +10,10 @@ kSignalAppStopped = '::nn::app::stopped'
 
 
 class App(ss.SObject):
-
     _shared = None
 
     @staticmethod
-    def shared():
+    def shared() -> 'App':
         return App._shared
 
     def __init__(self):
@@ -45,6 +45,16 @@ class App(ss.SObject):
             return func()
         except Exception as err:
             termcolor.cprint("实例化失败 %s" % entry, 'red')
+            logger.exception(err)
+        return None
+
+    def requireEntry(self, entry) -> object:
+        pack = entry.lower()
+        try:
+            mod = importlib.import_module(pack)
+            return mod
+        except Exception as err:
+            termcolor.cprint("导入库失败 %s" % entry, 'red')
             logger.exception(err)
         return None
 
