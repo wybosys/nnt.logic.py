@@ -21,7 +21,6 @@
               "app.router.sample"
             ],
             "model": [
-              "nnt.core.models",
               "app.model.sample"
             ]
           }
