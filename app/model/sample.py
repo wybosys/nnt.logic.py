@@ -1,5 +1,6 @@
+import nnt.core.models as cm
+import nnt.core.proto as cp
 import nnt.store.proto as sp
-from nnt.core.models import *
 
 
 @cp.model([cp.enum])
@@ -16,7 +17,7 @@ class Echoo:
     map = cp.map(5, cp.string_t, cp.integer_t, [cp.output])
     array = (6, cp.double_t, [cp.output])
     enm = cp.enumerate(7, EchoType, [cp.output])
-    nullval = cp.typer(8, Null, [cp.output])
+    nullval = cp.typer(8, cm.Null, [cp.output])
 
     def __init__(self):
         self.enm = EchoType.TEST
