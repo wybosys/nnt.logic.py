@@ -63,6 +63,10 @@ def toBoolean(obj):
     return not not obj
 
 
+def toObject(obj):
+    return obj
+
+
 class IntFloat:
     """ 用int来表示float """
 

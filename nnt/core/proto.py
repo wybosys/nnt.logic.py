@@ -409,3 +409,100 @@ def Encode(mdl) -> dict:
         else:
             r[key] = v
     return r
+
+
+def Output(mdl) -> dict:
+    """ 收集model的输出 """
+    if not mdl:
+        return None
+    fps = GetAllFields(mdl)
+    if not fps:
+        return None
+    r = {}
+    for fk in fps:
+        fp: FieldOption = fps[fk]
+        if not fp.output or not hasattr(mdl, fk):  # 不能和客户端一样删除掉对fk的判断，服务端会使用model直接扔到数据库中查询，去掉后会生成初始值查询字段
+            continue
+        val = getattr(mdl, fk)
+        if fp.valtype:
+            if fp.array:
+                arr = []
+                if val:
+                    # 通用类型，则直接可以输出
+                    if type_ispod(fp.valtype):
+                        if fp.valtype == string_t:
+                            for e in val:
+                                arr.append(toString(e))
+                        elif fp.valtype == integer_t:
+                            for e in val:
+                                arr.append(toInt(e))
+                        elif fp.valtype == double_t:
+                            for e in val:
+                                arr.append(toDouble(e))
+                        elif fp.valtype == number_t:
+                            for e in val:
+                                arr.append(toNumber(e))
+                        elif fp.valtype == boolean_t:
+                            for e in val:
+                                arr.append(toBoolean(e))
+                    else:
+                        # 特殊类型，需要迭代进去
+                        for e in val:
+                            arr.append(Output(e))
+                r[fk] = arr
+            elif fp.map:
+                m = {}
+                if val:
+                    if type_ispod(fp.valtype):
+                        for k in val:
+                            m[k] = val[k]
+                    else:
+                        for k in val:
+                            m[k] = Output(val[k])
+                r[fk] = m
+            elif fp.multimap:
+                m = multimap()
+                if val:
+                    if type_ispod(fp.valtype):
+                        for k in val:
+                            m[k] = val[k]
+                    else:
+                        for k in val:
+                            arr = []
+                            for e in val:
+                                arr.append(Output(e))
+                            m[k] = arr
+                r[fk] = m
+            elif fp.enum:
+                r[fk] = toInt(val)
+            else:
+                v = Output(val)
+                if v is None:
+                    v = toObject(val)
+                r[fk] = v
+        else:
+            if fp.string:
+                r[fk] = toString(val)
+            elif fp.integer:
+                r[fk] = toInt(val)
+            elif fp.double:
+                r[fk] = toDouble(val)
+            elif fp.number:
+                r[fk] = toNumber(val)
+            elif fp.boolean:
+                r[fk] = toBoolean(val)
+            elif fp.enum:
+                r[fk] = toInt(val)
+            elif fp.filter:
+                r[fk] = str(val)
+            elif fp.intfloat:
+                r[fk] = IntFloat.From(val, fp.intfloat).origin
+            else:
+                v = Output(val)
+                if v is None:
+                    v = toObject(val)
+                r[fk] = v
+    # 输出内置的数据
+    if hasattr(mdl, '_mid'):
+        r["_mid"] = getattr(mdl, '_mid')
+    return r
