@@ -76,7 +76,7 @@ class Router(r.IRouter):
             # 收集routers的信息
             infos = self.ActionsInfo(srv.routers)
             # 渲染页面
-            cnt = self._page.replace('{{action}}', kernel.toJson(infos))
+            cnt = self._page.replace('{{actions}}', kernel.toJson(infos))
             trans.output('text/html;charset=utf-8;', cnt)
             return
         trans.submit()
@@ -89,7 +89,7 @@ class Router(r.IRouter):
     def ActionsInfo(routers: Routers) -> [ActionInfo]:
         t: [ActionInfo] = []
         for e in routers:
-            t.append(Router.RouterActions(routers[e]))
+            t.extend(Router.RouterActions(routers[e]))
         return t
 
     @staticmethod
