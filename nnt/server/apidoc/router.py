@@ -1,5 +1,5 @@
 from ..routers import *
-from ...core import router as r, url, kernel
+from ...core import router as r, url, kernel, devops
 
 
 class ParameterInfo:
@@ -136,3 +136,24 @@ class Router(r.IRouter):
             }
             ps.append(t)
         return ps
+
+    @r.action(ExportApis, [r.expose], "生成api接口文件")
+    def export(self, trans: Transaction):
+        m: ExportApis = trans.model
+        if not m.node and \
+                not m.php and \
+                not m.h5g and \
+                not m.vue:
+            trans.status = STATUS.PARAMETER_NOT_MATCH
+            trans.submit()
+            return
+
+        # 分析出的所有结构
+        params = {
+            'domain': devops.GetDomain(),
+            'namespace': '',
+            'clazzes': [],
+            'enums': [],
+            'consts': [],
+            'routers': []
+        }
