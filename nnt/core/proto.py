@@ -15,10 +15,10 @@ constant = 6
 required = 7
 
 # 定义类型
-string_t = str
-integer_t = int
-double_t = float
-boolean_t = bool
+string_t = 'string'
+integer_t = 'integer'
+double_t = 'double'
+boolean_t = 'boolean'
 
 
 class number_t: pass
@@ -264,6 +264,11 @@ def Decode(mdl, params, input=True, output=False) -> object:
     fps = GetAllFields(mdl.__class__)
     if fps is None:
         return mdl
+    # python默认定义field会导致mdl身上的fp对应的字段不为nil，所以需要清空以便除param之外其他都为nil
+    for k in fps:
+        v = getattr(mdl, k)
+        if v == fps[k]:
+            setattr(mdl, k, None)
     for key in params:
         if key not in fps:
             continue
@@ -282,7 +287,7 @@ def DecodeValue(fp: FieldOption, val, input=True, output=False) -> object:
         if fp.array:
             arr = []
             if val:
-                if type_ispod(fp.valtype) and type(val) != list:
+                if type(fp.valtype) == str:
                     if type(val) != list:
                         # 对于array，约定用，来分割
                         val = val.split(",")
@@ -316,7 +321,7 @@ def DecodeValue(fp: FieldOption, val, input=True, output=False) -> object:
         elif fp.map:
             m = map()
             if val:
-                if type_ispod(fp.valtype):
+                if type(fp.valtype) == str:
                     if fp.valtype == string_t:
                         for ek in val:
                             ev = val[ek]
@@ -348,7 +353,7 @@ def DecodeValue(fp: FieldOption, val, input=True, output=False) -> object:
         elif fp.multimap:
             mm = multimap()
             if val:
-                if type_ispod(fp.valtype):
+                if type(fp.valtype) == str:
                     if fp.valtype == string_t:
                         for ek in val:
                             ev = val[ek]
@@ -383,7 +388,7 @@ def DecodeValue(fp: FieldOption, val, input=True, output=False) -> object:
         elif fp.enum:
             return toInt(val)
         else:
-            if not type_ispod(fp.valtype):
+            if type(fp.valtype) != str:
                 val = toJsonObject(val)
             if fp.valtype == object:
                 return val
@@ -456,7 +461,7 @@ def Output(mdl) -> dict:
                 arr = []
                 if val:
                     # 通用类型，则直接可以输出
-                    if type_ispod(fp.valtype):
+                    if type(fp.valtype) == str:
                         if fp.valtype == string_t:
                             for e in val:
                                 arr.append(toString(e))
@@ -480,7 +485,7 @@ def Output(mdl) -> dict:
             elif fp.map:
                 m = {}
                 if val:
-                    if type_ispod(fp.valtype):
+                    if type(fp.valtype) == str:
                         for k in val:
                             m[k] = val[k]
                     else:
@@ -490,7 +495,7 @@ def Output(mdl) -> dict:
             elif fp.multimap:
                 m = multimap()
                 if val:
-                    if type_ispod(fp.valtype):
+                    if type(fp.valtype) == str:
                         for k in val:
                             m[k] = val[k]
                     else:
@@ -551,7 +556,7 @@ def FpToTypeDef(fp: FieldOption) -> str:
         typ = "number"
     elif fp.array:
         typ = "Array<"
-        if type_ispod(fp.valtype):
+        if type(fp.valtype) == str:
             vt = "any"
             if fp.valtype == string_t:
                 vt = "string"
@@ -599,12 +604,12 @@ def FpToOptionsDef(fp: FieldOption, ns="") -> str:
 def FpToValtypeDef(fp: FieldOption, ns="") -> str:
     t = []
     if fp.keytype:
-        if type_ispod(fp.keytype):
+        if type(fp.keytype) == str:
             t.append(ns + fp.keytype + "_t")
         else:
             t.append(obj_get_classname(fp.keytype))
     if fp.valtype:
-        if type_ispod(fp.valtype):
+        if type(fp.valtype) == str:
             t.append(ns + fp.valtype + "_t")
         else:
             t.append(obj_get_classname(fp.valtype))

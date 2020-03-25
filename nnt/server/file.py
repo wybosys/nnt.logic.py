@@ -1,6 +1,7 @@
-from ..core.file import *
-import os
 import datetime
+import os
+
+from ..core.file import *
 
 
 class RespFile:
@@ -35,7 +36,7 @@ class RespFile:
         if self._stat:
             return self._stat.st_size
         if self._buf:
-            return self._buf.length
+            return len(self._buf)
         return 0
 
     def __init__(self):

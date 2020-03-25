@@ -33,7 +33,7 @@ class Jsobj(AbstractParser):
             if fp.array:
                 arr = []
                 if val:
-                    if fp.valtype == str:
+                    if type(fp.valtype) == str:
                         if type(val) != list:
                             # 对于array，约定用，来分割
                             val = val.split(",")
@@ -112,7 +112,7 @@ class Jsobj(AbstractParser):
                 elif fp.keytype == cp.number_t:
                     keyconv = toNumber
                 val = toJsonObject(val)
-                mmap = Multimap()
+                mmap = multimap()
                 if type(fp.valtype) == str:
                     if fp.valtype == cp.string_t:
                         for ek in val:
@@ -184,9 +184,14 @@ class Jsobj(AbstractParser):
 
     def fill(self, mdl, params, input: bool, output: bool):
         fps = cp.GetAllFields(mdl)
+        # python默认定义field会导致mdl身上的fp对应的字段不为nil，所以需要清空以便除param之外其他都为nil
+        for k in fps:
+            v = getattr(mdl, k)
+            if v == fps[k]:
+                setattr(mdl, k, None)
         for key in params:
             fp: cp.FieldOption = at(fps, key)
-            if fp == None:
+            if fp is None:
                 continue
             if input and not fp.input:
                 continue

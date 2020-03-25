@@ -173,12 +173,11 @@ class Router(r.IRouter):
         for each in ats(self._cfg, ['export', 'model'], []):
             modu = app.App.shared().requireModule(each)
             for ec in inspect.getmembers(modu):
-                _, clz = ec
+                name, clz = ec
                 if not cp.IsModel(clz):
-                    logger.log("跳过生成 %s" % each)
+                    # logger.log("跳过生成 %s" % name)
                     continue
 
-                name: str = clz.__name__
                 mp = cp.GetModelInfo(clz)
                 if mp.hidden:
                     continue
@@ -240,10 +239,13 @@ class Router(r.IRouter):
             for e in ats(self._cfg, ['export', 'router'], []):
                 modu = app.App.shared().requireModule(e)
                 for ec in inspect.getmembers(modu):
-                    _, clz = ec
+                    nm, clz = ec
                     if type(clz) != type:
                         continue
                     ass = r.GetAllActions(clz)
+                    if not ass:
+                        # logger.log('跳过生成接口 %s' % nm)
+                        continue
                     router = clz()
                     for name in ass:
                         ap: r.ActionProto = ass[name]
