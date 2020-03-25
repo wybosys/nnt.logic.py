@@ -389,3 +389,23 @@ def DecodeValue(fp: FieldOption, val, input=True, output=False) -> object:
             return IntFloat.From(toInt(val), fp.intfloat)
         else:
             return val
+
+
+def Encode(mdl) -> dict:
+    """ 把所有input的数据拿出来 """
+    r = {}
+    fps = GetAllFields(mdl)
+    if fps is None:
+        return r
+    for key in fps:
+        fp: FieldOption = fps[key]
+        if not fp.input:
+            continue
+        v = getattr(mdl, key)
+        if v is None:
+            continue
+        if fp.intfloat:
+            r[key] = IntFloat.From(v, fp.intfloat).origin
+        else:
+            r[key] = v
+    return r
