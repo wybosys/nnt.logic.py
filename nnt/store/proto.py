@@ -1,5 +1,3 @@
-from ..core.python import *
-
 key = 0
 subkey = 1
 notnull = 2
@@ -21,7 +19,7 @@ class TableSetting:
         super().__init__()
 
         # 生命期
-        self.ttl = None
+        self.ttl: float = None
 
 
 class FieldSetting:
@@ -30,7 +28,7 @@ class FieldSetting:
         super().__init__()
 
         # 生命期
-        self.ttl = None
+        self.ttl: float = None
 
 
 class TableInfo:
@@ -39,10 +37,10 @@ class TableInfo:
         super().__init__()
 
         # 数据库连接名
-        self.id = None
+        self.id: str = None
 
         # 数据表名
-        self.table = None
+        self.table: str = None
 
         # 设置
         self.setting: TableSetting = None
@@ -82,21 +80,22 @@ class FieldOption:
 
 def FpIsTypeEqual(l: FieldOption, r: FieldOption) -> bool:
     return l.string == r.string and \
-        l.integer == r.integer and \
-        l.double == r.double and \
-        l.boolean == r.boolean and \
-        l.number == r.number and \
-        l.intfloat == r.intfloat and \
-        l.json == r.json and \
-        l.array == r.array and \
-        l.map == r.map and \
-        l.keytype == r.keytype and \
-        l.valtype == r.valtype and \
-        l.loose == r.loose
+           l.integer == r.integer and \
+           l.double == r.double and \
+           l.boolean == r.boolean and \
+           l.number == r.number and \
+           l.intfloat == r.intfloat and \
+           l.json == r.json and \
+           l.array == r.array and \
+           l.map == r.map and \
+           l.keytype == r.keytype and \
+           l.valtype == r.valtype and \
+           l.loose == r.loose
 
 
 def table(dbid: str, tbnm: str, setting: TableSetting = None):
     """定义一个数据表模型，注意：数据表模型不能继承"""
+
     def _(clazz):
         dp = TableInfo()
         dp.id = dbid
@@ -104,6 +103,7 @@ def table(dbid: str, tbnm: str, setting: TableSetting = None):
         dp.setting = setting
         setattr(clazz, MP_KEY, dp)
         return clazz
+
     return _
 
 
@@ -122,7 +122,7 @@ def column(opts=None, setting=None) -> FieldOption:
         fp.loose = loose in opts
     fp.setting = setting
     return fp
-    
+
 
 def string(opts=None, setting=None):
     fp = column(opts)

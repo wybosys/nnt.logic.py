@@ -83,7 +83,12 @@ def action(mdlclz, options=None, comment=None):
                 setattr(ap, e, True)
 
             # options默认为空代表开放，其他情形检测环境参数
-            optcheck = debug in options or develop in options or local in options or devops in options or devopsdevelop in options or devopsrelease in options
+            optcheck = debug in options or \
+                       develop in options or \
+                       local in options or \
+                       devops in options or \
+                       devopsdevelop in options or \
+                       devopsrelease in options
 
             # 检测环境
             if optcheck:
@@ -115,18 +120,19 @@ def action(mdlclz, options=None, comment=None):
 
 
 def FindAction(target, key: str) -> ActionProto:
-    clazz = target.__class__
-    modunm = clazz.__module__
-    clazzpath = modunm + '.' + clazz.__name__
-    if clazzpath not in _actions:
-        return None
-    return _actions[clazzpath][key]
+    fps = GetAllActions(target)
+    return fps[key] if fps else None
 
 
 def GetAllActionNames(target) -> [str]:
+    fps = GetAllActions(target)
+    return list(fps.keys()) if fps else None
+
+
+def GetAllActions(target) -> [str, ActionProto]:
     clazz = target.__class__
     modunm = clazz.__module__
     clazzpath = modunm + '.' + clazz.__name__
     if clazzpath not in _actions:
         return None
-    return list(_actions[clazzpath].keys())
+    return _actions[clazzpath]

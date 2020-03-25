@@ -50,6 +50,20 @@ def obj_get_classname(obj, default=None) -> str:
         return default
 
 
+def obj_get_class(obj, default=None):
+    typ = type(obj)
+    if typ == type:
+        return obj
+    return typ
+
+
+POD_TYPES = [str, int, float, bool]
+
+
+def type_ispod(typ) -> bool:
+    return typ in POD_TYPES
+
+
 class StringT:
 
     @staticmethod
@@ -61,3 +75,29 @@ class StringT:
             if e or not skipempty:
                 r0.append(e)
         return r0
+
+
+class multimap:
+
+    def __init__(self):
+        self._m = {}
+
+    def set(self, k, arr):
+        if type(arr) != list:
+            raise TypeError("multimap的set只接受list类型")
+        self._m[k] = arr
+
+    def __len__(self):
+        return self._m.__len__()
+
+    def __getitem__(self, item):
+        return self._m.__getitem__(item)
+
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def __iter__(self):
+        return self._m.__iter__()
+
+    def clear(self):
+        self._m.clear()

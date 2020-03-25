@@ -1,5 +1,8 @@
 import inspect
 
+from .kernel import *
+from .python import *
+
 # 定义标记
 
 input = 0
@@ -230,3 +233,159 @@ def GetAllFields(clazz) -> [str, FieldOption]:
         if isinstance(obj, FieldOption):
             fs[nm] = obj
     return fs
+
+
+def Decode(mdl, params, input=True, output=False) -> object:
+    """将数据从参数集写入到模型中的字段"""
+    fps = GetAllFields(mdl.__class__)
+    if fps is None:
+        return mdl
+    for key in params:
+        if key not in fps:
+            continue
+        fp: FieldOption = fps[key]
+        if input and not fp.input:
+            continue
+        if output and not fp.output:
+            continue
+        dv = DecodeValue(fp, params[key], input, output)
+        setattr(mdl, key, dv)
+    return mdl
+
+
+def DecodeValue(fp: FieldOption, val, input=True, output=False) -> object:
+    if fp.valtype:
+        if fp.array:
+            arr = []
+            if val:
+                if type_ispod(fp.valtype) and type(val) != list:
+                    if type(val) != list:
+                        # 对于array，约定用，来分割
+                        val = val.split(",")
+                    if fp.valtype == string_t:
+                        for e in val:
+                            arr.append(toString(e))
+                    elif fp.valtype == integer_t:
+                        for e in val:
+                            arr.append(toInt(e))
+                    elif fp.valtype == double_t:
+                        for e in val:
+                            arr.append(toDouble(e))
+                    elif fp.valtype == number_t:
+                        for e in val:
+                            arr.append(toNumber(e))
+                    elif fp.valtype == boolean_t:
+                        for e in val:
+                            arr.append(toBoolean(e))
+                else:
+                    if type(val) == str:
+                        val = toJsonObject(val)
+                    if val and type(val) == list:
+                        clz = fp.valtype
+                        for e in val:
+                            t = clz()
+                            Decode(t, e, input, output)
+                            arr.append(t)
+                    else:
+                        logger.log("Array遇到了错误的数据 " + val)
+            return arr
+        elif fp.map:
+            m = map()
+            if val:
+                if type_ispod(fp.valtype):
+                    if fp.valtype == string_t:
+                        for ek in val:
+                            ev = val[ek]
+                        m[ek] = toString(ev)
+                    elif fp.valtype == integer_t:
+                        for ek in val:
+                            ev = val[ek]
+                        m[ek] = toInt(ev)
+                    elif fp.valtype == double_t:
+                        for ek in val:
+                            ev = val[ek]
+                        m[ek] = toDouble(ev)
+                    elif fp.valtype == number_t:
+                        for ek in val:
+                            ev = val[ek]
+                        m[ek] = toNumber(ev)
+                    elif fp.valtype == boolean_t:
+                        for ek in val:
+                            ev = val[ek]
+                        m[ek] = toBoolean(ev)
+                else:
+                    clz = fp.valtype
+                    for ek in val:
+                        ev = val[ek]
+                        t = clz()
+                        Decode(t, ev, input, output)
+                        m[ek] = t
+                return m
+        elif fp.multimap:
+            mm = multimap()
+            if val:
+                if type_ispod(fp.valtype):
+                    if fp.valtype == string_t:
+                        for ek in val:
+                            ev = val[ek]
+                            mm.set(ek, [toString(e) for e in ev])
+                    elif fp.valtype == integer_t:
+                        for ek in val:
+                            ev = val[ek]
+                            mm.set(ek, [toInt(e) for e in ev])
+                    elif fp.valtype == double_t:
+                        for ek in val:
+                            ev = val[ek]
+                            mm.set(ek, [toDouble(e) for e in ev])
+                    elif fp.valtype == number_t:
+                        for ek in val:
+                            ev = val[ek]
+                            mm.set(ek, [toNumber(e) for e in ev])
+                    elif fp.valtype == boolean_t:
+                        for ek in val:
+                            ev = val[ek]
+                            mm.set(ek, [toBoolean(e) for e in ev])
+                else:
+                    clz = fp.valtype
+                    for ek in val:
+                        ev = val[ek]
+                        arr = []
+                        for e in ev:
+                            t = clz()
+                            Decode(t, e, input, output)
+                            arr.append(t)
+                        mm.set(ek, arr)
+            return mm
+        elif fp.enum:
+            return toInt(val)
+        else:
+            if not type_ispod(fp.valtype):
+                val = toJsonObject(val)
+            if fp.valtype == object:
+                return val
+            clz = fp.valtype
+            t = clz()
+            Decode(t, val, input, output)
+            return t
+    else:
+        if fp.string:
+            return toString(val)
+        elif fp.integer:
+            return toInt(val)
+        elif fp.double:
+            return toDouble(val)
+        elif fp.number:
+            return toNumber(val)
+        elif fp.boolean:
+            return toBoolean(val)
+        elif fp.enum:
+            return toInt(val)
+        elif fp.json:
+            return toJsonObject(val)
+        elif fp.filter:
+            pass
+            # return Filter.Parse(val)
+        elif fp.intfloat:
+            return IntFloat.From(toInt(val), fp.intfloat)
+        else:
+            return val
