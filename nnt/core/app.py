@@ -52,10 +52,15 @@ class App(ss.SObject):
         pack = entry.lower()
         try:
             mod = importlib.import_module(pack)
-            return mod
+            _, _, clazz = entry.rpartition('.')
+            func = getattr(mod, clazz)
+            return func
         except Exception as err:
             termcolor.cprint("导入库失败 %s" % entry, 'red')
             logger.exception(err)
+        return None
+
+    def requirePath(self, path: str) -> object:
         return None
 
     def containsEntry(self, entry) -> bool:

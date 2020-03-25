@@ -228,10 +228,34 @@ def IsNeedAuth(mdl) -> bool:
 def GetAllFields(clazz) -> [str, FieldOption]:
     fs = {}
     for e in inspect.getmembers(clazz):
-        nm = e[0]
-        obj = e[1]
+        nm, obj = e
         if isinstance(obj, FieldOption):
             fs[nm] = obj
+    return fs
+
+
+def IsParentField(clazz, fp: FieldOption) -> bool:
+    for each in clazz.__bases__:
+        if each == object:
+            continue
+        for e in inspect.getmembers(each):
+            nm, obj = e
+            if obj == fp:
+                return True
+        if IsParentField(each, fp):
+            return True
+    return False
+
+
+def GetAllOwnFields(clazz) -> [str, FieldOption]:
+    fs = {}
+    for e in inspect.getmembers(clazz):
+        nm, obj = e
+        if not isinstance(obj, FieldOption):
+            continue
+        if IsParentField(clazz, obj):
+            continue
+        fs[nm] = obj
     return fs
 
 

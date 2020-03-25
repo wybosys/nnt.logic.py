@@ -119,18 +119,17 @@ def action(mdlclz, options=None, comment=None):
     return _
 
 
-def FindAction(target, key: str) -> ActionProto:
-    fps = GetAllActions(target)
+def FindAction(clazz, key: str) -> ActionProto:
+    fps = GetAllActions(clazz)
     return fps[key] if fps else None
 
 
-def GetAllActionNames(target) -> [str]:
-    fps = GetAllActions(target)
+def GetAllActionNames(clazz) -> [str]:
+    fps = GetAllActions(clazz)
     return list(fps.keys()) if fps else None
 
 
-def GetAllActions(target) -> [str, ActionProto]:
-    clazz = target.__class__
+def GetAllActions(clazz) -> [str, ActionProto]:
     modunm = clazz.__module__
     clazzpath = modunm + '.' + clazz.__name__
     if clazzpath not in _actions:
