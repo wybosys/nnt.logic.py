@@ -43,7 +43,7 @@ class RespFile:
         super().__init__()
 
         self._file: str = None
-        self._buf: bytearray = None
+        self._buf: bytes = None
         self.type: str = None
         self._stat: os.stat_result = None
         self._cachable: bool = True
@@ -57,6 +57,10 @@ class RespFile:
         if self._downloadfile:
             return self._downloadfile
         return None
+
+    @property
+    def buffer(self) -> bytes:
+        return self._buf
 
     @property
     def stat(self) -> os.stat_result:

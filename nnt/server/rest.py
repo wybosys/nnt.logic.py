@@ -447,11 +447,13 @@ class HttpServer:
                                  'attachment; filename=' + obj.file)
                 pl.rsp.setHeader('Content-Description', "File Transfer")
                 pl.rsp.setHeader('Content-Transfer-Encoding', 'binary')
-            pl.rsp.setHeaders(ct)
             if t.gzip and not t.compressed:
-                obj.readStream.pipe(zlib.createGzip()).pipe(pl.rsp)
+                obj = codec.gzip_compress(obj.buffer)
             else:
-                obj.readStream.pipe(pl.rsp)
+                obj = obj.buffer
+            pl.rsp.raw = obj
+            pl.rsp.setHeaders(ct)
+            pl.rsp.send()
         else:
             if t.gzip and not t.compressed:
                 obj = codec.gzip_compress(obj)
