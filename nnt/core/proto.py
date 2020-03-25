@@ -506,3 +506,183 @@ def Output(mdl) -> dict:
     if hasattr(mdl, '_mid'):
         r["_mid"] = getattr(mdl, '_mid')
     return r
+
+
+def FpToTypeDef(fp: FieldOption) -> str:
+    typ = ""
+    if fp.string:
+        typ = "string"
+    elif fp.integer:
+        typ = "number"
+    elif fp.double:
+        typ = "number"
+    elif fp.number:
+        typ = "number"
+    elif fp.boolean:
+        typ = "boolean"
+    elif fp.intfloat:
+        typ = "number"
+    elif fp.array:
+        typ = "Array<"
+        if type_ispod(fp.valtype):
+            vt = "any"
+            if fp.valtype == string_t:
+                vt = "string"
+            elif fp.valtype == double_t or \
+                    fp.valtype == integer_t or \
+                    fp.valtype == number_t:
+                vt = "number"
+            elif fp.valtype == boolean_t:
+                vt = "boolean"
+            typ += vt
+        else:
+            typ += obj_get_classname(fp.valtype)
+        typ += ">"
+    elif fp.map:
+        typ = "Map<" + ValtypeDefToDef(fp.keytype) + ", " + ValtypeDefToDef(fp.valtype) + ">"
+    elif fp.multimap:
+        typ = "Multimap<" + ValtypeDefToDef(fp.keytype) + ", " + ValtypeDefToDef(fp.valtype) + ">"
+    elif fp.enum:
+        typ = obj_get_classname(fp.valtype)
+    elif fp.file:
+        if fp.input:
+            typ = "any"
+        else:
+            typ = "string"
+    elif fp.filter:
+        typ = "string"
+    elif fp.json:
+        typ = "Object"
+    else:
+        typ = obj_get_classname(fp.valtype)
+    return typ
+
+
+def FpToOptionsDef(fp: FieldOption, ns="") -> str:
+    r = []
+    if fp.input:
+        r.append(ns + 'input')
+    if fp.output:
+        r.append(ns + 'output')
+    if fp.optional:
+        r.append(ns + 'optional')
+    return "[" + ', '.join(r) + "]"
+
+
+def FpToValtypeDef(fp: FieldOption, ns="") -> str:
+    t = []
+    if fp.keytype:
+        if type_ispod(fp.keytype):
+            t.append(ns + fp.keytype + "_t")
+        else:
+            t.append(obj_get_classname(fp.keytype))
+    if fp.valtype:
+        if type_ispod(fp.valtype):
+            t.append(ns + fp.valtype + "_t")
+        else:
+            t.append(obj_get_classname(fp.valtype))
+    if fp.intfloat:
+        t.append(fp.intfloat)
+    return ', '.join(t)
+
+
+def ValtypeDefToDef(deftyp) -> str:
+    if deftyp == string_t:
+        return 'string'
+    elif deftyp == double_t or deftyp == integer_t or deftyp == double_t:
+        return 'number'
+    elif deftyp == boolean_t:
+        return 'boolean'
+    return obj_get_classname(deftyp)
+
+
+def FpToCommentDef(fp: FieldOption) -> str:
+    return (", \"" + fp.comment + "\"") if fp.comment else ''
+
+
+def FpToDecoDef(fp: FieldOption, ns="") -> str:
+    deco = None
+    if fp.string:
+        deco = "@" + ns + "string(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    elif fp.integer:
+        deco = "@" + ns + "integer(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    elif fp.double:
+        deco = "@" + ns + "double(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    elif fp.number:
+        deco = "@" + ns + "number(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    elif fp.double:
+        deco = "@" + ns + "number(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    elif fp.intfloat:
+        deco = "@" + ns + "intfloat(" + str(fp.id) + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp,
+                                                                                                           ns) + FpToCommentDef(
+            fp) + ")"
+    elif fp.boolean:
+        deco = "@" + ns + "boolean(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    elif fp.array:
+        deco = "@" + ns + "array(" + str(fp.id) + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp,
+                                                                                                        ns) + FpToCommentDef(
+            fp) + ")"
+    elif fp.map:
+        deco = "@" + ns + "map(" + str(fp.id) + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp,
+                                                                                                      ns) + FpToCommentDef(
+            fp) + ")"
+    elif fp.multimap:
+        deco = "@" + ns + "multimap(" + str(fp.id) + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp,
+                                                                                                           ns) + FpToCommentDef(
+            fp) + ")"
+    elif fp.enum:
+        deco = "@" + ns + "enumerate(" + str(fp.id) + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp,
+                                                                                                            ns) + FpToCommentDef(
+            fp) + ")"
+    elif fp.file:
+        deco = "@" + ns + "file(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    elif fp.filter:
+        deco = "@" + ns + "filter(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    elif fp.json:
+        deco = "@" + ns + "json(" + str(fp.id) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")"
+    else:
+        deco = "@" + ns + "type(" + str(fp.id) + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp,
+                                                                                                       ns) + FpToCommentDef(
+            fp) + ")"
+    return deco
+
+
+def FpToDecoDefPHP(fp: FieldOption) -> str:
+    deco = None
+    if fp.string:
+        deco = "@Api(" + str(fp.id) + ", [string], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")"
+        deco += "\n\t* @var string"
+    elif fp.integer:
+        deco = "@Api(" + str(fp.id) + ", [integer], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")"
+        deco += "\n\t* @var int"
+    elif fp.double:
+        deco = "@Api(" + str(fp.id) + ", [double], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")"
+        deco += "\n\t* @var double"
+    elif fp.number:
+        deco = "@Api(" + str(fp.id) + ", [number], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")"
+        deco += "\n\t* @var int|double"
+    elif fp.boolean:
+        deco = "@Api(" + str(fp.id) + ", [boolean], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")"
+        deco += "\n\t* @var boolean"
+    elif fp.array:
+        deco = "@Api(" + str(fp.id) + ", [array, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(
+            fp) + ")"
+    elif fp.map:
+        deco = "@Api(" + str(fp.id) + ", [map, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(
+            fp) + ")"
+    elif fp.multimap:
+        deco = "@Api(" + str(fp.id) + ", [multimap, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(
+            fp) + FpToCommentDef(fp) + ")"
+    elif fp.enum:
+        deco = "@Api(" + str(fp.id) + ", [enum, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(
+            fp) + ")"
+    elif fp.file:
+        deco = "@Api(" + str(fp.id) + ", [file], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")"
+    elif fp.filter:
+        deco = "@Api(" + str(fp.id) + ", [filter], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")"
+    elif fp.json:
+        deco = "@Api(" + str(fp.id) + ", [json], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")"
+    else:
+        deco = "@Api(" + str(fp.id) + ", [type, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(
+            fp) + ")"
+    return deco
