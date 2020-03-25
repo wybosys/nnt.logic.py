@@ -1,6 +1,7 @@
 import inspect
 
 # 定义标记
+
 input = 0
 output = 1
 optional = 2
@@ -39,18 +40,6 @@ class ModelOption:
 
         # 父类，目前用来生成api里面的父类名称
         self.parent = None
-
-
-class FieldValidProc:
-
-    def __init__(self):
-        super().__init__()
-
-        # 可以附加一个错误码
-        self.status = None
-
-        # 当返回false时，即为验证失败，此时上层可以通过获取status来返回特定的错误状态码
-        self.fn = None  # (inp: any): boolean
 
 
 class FieldOption:
@@ -92,7 +81,6 @@ class FieldOption:
 
         # 有效性检查函数, FieldValidProc 或者 函数
         self.valid = None
-        self.valid_result: int = None
 
 
 MP_KEY = "__modelproto"

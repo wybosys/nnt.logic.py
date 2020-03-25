@@ -1,10 +1,9 @@
+from . import devops
+from .transaction import Transaction
 from ..core import logger
 from ..core.models import *
 from ..core.python import *
 from ..manager import config
-from . import devops
-import types
-from .transaction import Transaction
 
 
 class Routers:
@@ -22,7 +21,7 @@ class Routers:
             logger.fatal("已经注册了一个同名的路由 %s" % obj.action)
             return
         self._routers[obj.action] = obj
-        #print("注册路由 %s" % obj.action)
+        # print("注册路由 %s" % obj.action)
 
     def find(self, id):
         return at(self._routers, id)
@@ -40,24 +39,18 @@ class Routers:
         r = at(self._routers, trans.router)
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
-            await trans.submit()
+            trans.submit()
             return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
-            await trans.submit()
+            trans.submit()
             return
 
         # 恢复数据上下文
         await trans.collect()
-
-        # 请求锁，实现流控的目的
-        if trans.frqctl and not await trans.lock():
-            trans.status = STATUS.HFDENY
-            await trans.submit()
-            return
 
         # 检查是否需要验证
         if ac and ac.ignore:
@@ -68,19 +61,19 @@ class Routers:
             if trans.needAuth():
                 if not trans.auth():
                     trans.status = STATUS.NEED_AUTH
-                    await trans.submit()
+                    trans.submit()
                     return
             else:
                 # 检查devops
                 if not await self._devopscheck(trans):
                     trans.status = STATUS.PERMISSIO_FAILED
-                    await trans.submit()
+                    trans.submit()
                     return
 
         func = at(r, trans.call)
-        if type(func) != types.FunctionType:
+        if not callable(func):
             trans.status = STATUS.ACTION_NOT_FOUND
-            await trans.submit()
+            trans.submit()
             return
 
         # 不论同步或者异步模式，默认认为是成功的，业务逻辑如果出错则再次设置status为对应的错误码
@@ -90,11 +83,11 @@ class Routers:
         except Exception as err:
             if isinstance(err, ModelError):
                 trans.status = err.code
-                trans.message = err.message
+                trans.message = err.msg
             else:
                 trans.status = STATUS.EXCEPTION
-                trans.message = err.message
-            await trans.submit()
+                trans.message = str(err)
+            trans.submit()
 
     async def listen(self, trans):
         trans.timeout(-1)
@@ -103,14 +96,14 @@ class Routers:
         r = at(self._routers, trans.router)
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
-            await trans.submit()
+            trans.submit()
             return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
-            await trans.submit()
+            trans.submit()
             return
 
         trans.quiet = True
@@ -123,14 +116,14 @@ class Routers:
         r = at(self._routers, trans.router)
         if not r:
             trans.status = STATUS.ROUTER_NOT_FOUND
-            await trans.submit()
+            trans.submit()
             return
 
         # 模型化
         sta = trans.modelize(r)
         if sta:
             trans.status = sta
-            await trans.submit()
+            trans.submit()
             return
 
         trans.quiet = True

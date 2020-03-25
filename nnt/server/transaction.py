@@ -213,16 +213,9 @@ class Transaction:
 
     def auth(self) -> bool:
         """ 是否已经授权 """
-        return None
-
-    async def lock(self) -> bool:
-        """ 需要业务层实现对api的流控，避免同一个api瞬间调用多次，业务层通过重载lock/unlock实现,, lock当即将调用api时由其他逻辑调用 """
         return False
 
-    async def unlock(self):
-        pass
-
-    async def submit(self, opt: TransactionSubmitOption = None):
+    def submit(self, opt: TransactionSubmitOption = None):
         if self._submited:
             if not self._submited_timeout:
                 logger.warn("数据已经发送")
@@ -237,14 +230,10 @@ class Transaction:
         self._outputed = True
         if self.hookSubmit:
             try:
-                await self.hookSubmit()
+                self.hookSubmit()
             except Exception as err:
                 logger.exception(err)
         self.implSubmit(self, opt)
-
-        # 只有打开了频控，并且此次是正常操作，才解锁
-        if self.frqctl and self.status != STATUS.HFDENY:
-            self.unlock()
 
     def output(self, type, obj):
         if self._outputed:
@@ -276,6 +265,7 @@ class Transaction:
 
     def _cbTimeout(self):
         logger.warn("%s 超时" % self.action)
+        self._timeout = None
         self.status = STATUS.TIMEOUT
         self.submit()
 

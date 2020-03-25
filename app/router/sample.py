@@ -1,6 +1,7 @@
 import nnt.core.router as r
-from ..model import *
 from nnt.core import time
+from ..model import *
+
 
 class Sample(r.IRouter):
 
@@ -17,4 +18,3 @@ class Sample(r.IRouter):
         m.map.set('a0', 0).set('b1', 1)
         m.array.push(0, 1, 2, 3)
         trans.submit()
-        

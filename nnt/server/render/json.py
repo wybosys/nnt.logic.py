@@ -1,9 +1,9 @@
 from .render import AbstractRender
 from ..transaction import *
-from ...core.python import *
-from ...core.kernel import *
 from ...core import proto as cp
+from ...core.kernel import *
 from ...core.models import STATUS
+from ...core.python import *
 
 
 class Json(AbstractRender):
@@ -12,14 +12,14 @@ class Json(AbstractRender):
         super().__init__()
         self.type = 'application/json'
 
-    def render(self, trans: Transaction, opt: TransactionSubmitOption) -> str:
+    def render(self, trans: Transaction, opt: TransactionSubmitOption = None) -> str:
         r = None
         if opt and opt.model:
             if opt.raw:
                 s = toString(trans.model)
                 return s
             r = cp.Output(trans.model)
-            if trans.model and r == None:
+            if trans.model and r is None:
                 r = {}
         else:
             r = {
@@ -29,7 +29,7 @@ class Json(AbstractRender):
                 r['message'] = trans.message
             else:
                 r['data'] = trans.model if (
-                    opt and opt.raw) else cp.Output(trans.model)
+                        opt and opt.raw) else cp.Output(trans.model)
                 if r['data'] == None and trans.model:
                     r['data'] = {}
         cmid = at(trans.params, "_cmid")

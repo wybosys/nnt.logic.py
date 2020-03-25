@@ -1,4 +1,3 @@
-from ...core import logger
 from ..transaction import *
 
 
@@ -8,7 +7,7 @@ class AbstractRender:
         super().__init__()
 
         # 输出的类型
-        self.type: str = None
+        self.type: str = 'text/plain'
 
     def render(self, trans: Transaction, opt: TransactionSubmitOption = None) -> str:
         """渲染数据"""

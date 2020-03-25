@@ -1,7 +1,7 @@
 from . import proto as cp
 
 
-@cp.model
+@cp.model()
 class Null:
     """空模型"""
     pass
@@ -19,7 +19,7 @@ class AuthedObject:
     object = cp.typer(1, object, [cp.output])
 
 
-@cp.model
+@cp.model()
 class SeqPaged:
     """具有顺序性的分页基类模型"""
 
@@ -38,7 +38,7 @@ class SeqPaged:
         return self.last + self.limit
 
 
-@cp.model
+@cp.model()
 class NumPaged:
     """基于页码的分页数据模型"""
 

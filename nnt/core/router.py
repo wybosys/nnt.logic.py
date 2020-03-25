@@ -1,5 +1,4 @@
 from ..manager import config
-import sys
 
 
 class IRouter:
@@ -71,6 +70,7 @@ _actions = {}
 
 def action(mdlclz, options=None, comment=None):
     """ 定义router需要的model对象 """
+
     def _(fun):
         ap = ActionProto()
         ap.clazz = mdlclz
@@ -110,6 +110,7 @@ def action(mdlclz, options=None, comment=None):
                 _actions[clazzpath] = {}
             _actions[clazzpath][fun.__name__] = ap
         return fun
+
     return _
 
 

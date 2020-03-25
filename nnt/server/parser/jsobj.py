@@ -1,8 +1,8 @@
 from .parser import AbstractParser
-from ...core.models import STATUS
-from ...core import proto as cp, logger
-from ...core.python import *
+from ...core import proto as cp
 from ...core.kernel import *
+from ...core.models import STATUS
+from ...core.python import *
 
 
 class Jsobj(AbstractParser):
@@ -17,8 +17,7 @@ class Jsobj(AbstractParser):
             if fp.optional:
                 if fp.valid and inp:
                     v = self.decodeField(fp, inp, True, False)
-                    if not fp.valid(v):
-                        return fp.valid_status if fp.valid_status != None else STATUS.PARAMETER_NOT_MATCH
+                    return fp.valid(v)
                 continue
             if not inp:
                 return STATUS.PARAMETER_NOT_MATCH
@@ -26,8 +25,7 @@ class Jsobj(AbstractParser):
             if fp.valid:
                 # 需要提前转换一下类型
                 v = self.decodeField(fp, inp, True, False)
-                if not fp.valid(v):
-                    return fp.valid_status if fp.valid_status != None else STATUS.PARAMETER_NOT_MATCH
+                return fp.valid(v)
         return STATUS.OK
 
     def decodeField(self, fp: cp.FieldOption, val, input: bool, output: bool):
