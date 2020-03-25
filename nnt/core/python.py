@@ -1,5 +1,6 @@
 import os
 
+
 # 扩展python基础函数
 
 
@@ -35,6 +36,18 @@ def get_file_content(file):
     if not os.path.exists(file):
         return ''
     return ''.join(open(file).readlines())
+
+
+def obj_get_classname(obj, default=None) -> str:
+    try:
+        typ = type(obj)
+        if typ == str:
+            return obj
+        if typ == type:
+            return obj.__name__
+        return obj.__class__.__name__
+    except:
+        return default
 
 
 class StringT:

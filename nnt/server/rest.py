@@ -416,10 +416,10 @@ class HttpServer:
         pl.rsp.setHeaders(ct)
         pl.rsp.send()
 
-    def output(self, t, type: str, obj):
+    def output(self, t: Transaction, typ: str, obj):
         pl: TransactionPayload = t.payload
-        ct = {"Content-Type": type}
-        if self.gzip:
+        ct = {"Content-Type": typ}
+        if t.gzip:
             ct["Content-Encoding"] = "gzip"
         if isinstance(obj, RespFile):
             ct["Content-Length"] = obj.length
@@ -448,6 +448,10 @@ class HttpServer:
             else:
                 obj.readStream.pipe(pl.rsp)
         else:
+            if t.gzip and not t.compressed:
+                obj = codec.gzip_compress(obj)
+            elif type(obj) == str:
+                obj = obj.encode('utf-8')
             pl.rsp.raw = obj
             pl.rsp.setHeaders(ct)
             pl.rsp.send()

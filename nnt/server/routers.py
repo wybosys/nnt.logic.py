@@ -1,3 +1,5 @@
+import inspect
+
 from . import devops
 from .transaction import Transaction
 from ..core import logger
@@ -12,9 +14,14 @@ class Routers:
         super().__init__()
         self._routers = {}
 
-    @property
-    def length(self):
-        return len(self._routers)
+    def __len__(self):
+        return self._routers.__len__()
+
+    def __iter__(self):
+        return self._routers.__iter__()
+
+    def __getitem__(self, item):
+        return self._routers.__getitem__(item)
 
     def register(self, obj):
         if obj.action in self._routers:
@@ -28,9 +35,6 @@ class Routers:
 
     def unregister(self, act):
         delete(self._routers, act)
-
-    def __iter__(self):
-        return self._routers.__iter__()
 
     async def process(self, trans: Transaction):
         ac = trans.ace
@@ -79,7 +83,10 @@ class Routers:
         # 不论同步或者异步模式，默认认为是成功的，业务逻辑如果出错则再次设置status为对应的错误码
         trans.status = STATUS.OK
         try:
-            await func(trans)
+            if inspect.iscoroutinefunction(func):
+                await func(trans)
+            else:
+                func(trans)
         except Exception as err:
             if isinstance(err, ModelError):
                 trans.status = err.code

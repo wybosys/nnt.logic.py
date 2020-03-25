@@ -1,8 +1,5 @@
-from ...core import proto as cp, router as r, url, kernel
-from ...core.python import *
-from ...core.models import *
-from ..transaction import Transaction
 from ..routers import *
+from ...core import router as r, url, kernel
 
 
 class ParameterInfo:
@@ -23,7 +20,7 @@ class ParameterInfo:
         self.map: bool = False
         self.object: bool = False
         self.optional: bool = False
-        self.index:  int = 0
+        self.index: int = 0
         self.input: bool = False
         self.output: bool = False
         self.comment: str = None
@@ -43,7 +40,6 @@ class ActionInfo:
 
 
 class RouterConfig:
-
     class Export:
 
         def __init__(self):
@@ -58,7 +54,6 @@ class RouterConfig:
 
 @cp.model
 class ExportApis:
-
     node = cp.boolean(1, [cp.input, cp.optional], "生成 logic.node 使用的api")
     php = cp.boolean(2, [cp.input, cp.optional], "生成 logic.php 使用的api")
     h5g = cp.boolean(3, [cp.input, cp.optional], "生成 game.h5 游戏使用api")
@@ -132,7 +127,6 @@ class Router(r.IRouter):
                 'boolean': info.boolean,
                 'file': info.file,
                 'enum': info.enum,
-                'array': info.array,
                 'map': info.map,
                 'object': info.json,
                 'optional': info.optional,
@@ -140,8 +134,8 @@ class Router(r.IRouter):
                 'input': info.input,
                 'output': info.output,
                 'comment': info.comment,
-                'valtyp': info.valtype,
-                'keytyp': info.keytype
+                'valtyp': obj_get_classname(info.valtype),
+                'keytyp': obj_get_classname(info.keytype)
             }
             ps.append(t)
         return ps

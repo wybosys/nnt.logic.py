@@ -58,10 +58,10 @@ class TransactionSubmitOption:
         super().__init__()
 
         # 仅输出模型
-        self.model = False
+        self.model: bool = False
 
         # 直接输出数据
-        self.raw = False
+        self.raw: bool = False
 
         # 输出的类型
         self.type = None
@@ -73,19 +73,19 @@ class Transaction:
         super().__init__()
 
         # 超时定时器
-        self._timeout = None
+        self._timeout: time.Delayer = None
 
         # 运行在console中
-        self.console = None
+        self.console: bool = None
 
         # 环境信息
         self.info = TransactionInfo()
 
         # 是否把sid返回客户端
-        self.responseSessionId = None
+        self.responseSessionId: str = None
 
         # 静默模式，不输出回调
-        self.quiet = False
+        self.quiet: bool = False
 
         # 用来解析传入数据
         self.parser = None
@@ -102,10 +102,10 @@ class Transaction:
         self.params = None
 
         # 执行的结果
-        self.status = STATUS.UNKNOWN
+        self.status: int = STATUS.UNKNOWN
 
         # 错误信息
-        self.message = None
+        self.message: str = None
 
         # 额外数据
         self.payload = None
@@ -117,16 +117,16 @@ class Transaction:
         self.server = None
 
         # 是否需要压缩
-        self.gzip = False
+        self.gzip: bool = False
 
         # 是否已经压缩
-        self.compressed = False
+        self.compressed: bool = False
 
         # 需要打开频控
-        self.frqctl = False
+        self.frqctl: bool = False
 
         # 是否暴露接口（通常只有登录会设置为true)
-        self.expose = False
+        self.expose: bool = False
 
         # 此次的时间
         self.time = time.DateTime.Now()
