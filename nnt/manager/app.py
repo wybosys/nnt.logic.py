@@ -1,14 +1,13 @@
-import os
 import json
-import shutil
 import sys
-from ..core.python import *
-from ..core import logger, url, app
+
 from . import config, assets, loggers, dbmss, servers
+from .hook import *
+from ..core import logger, url, app
+from ..core.python import *
 
 
 class App(app.App):
-
     # 当前配置信息
     CurrentConfig = None
 
@@ -123,7 +122,7 @@ class App(app.App):
                 config.ACCESS_DENY = cfg['deny']
 
         if not os.path.exists(config.CACHE):
-            shutil.os.makedirs(config.CACHE)
+            os.makedirs(config.CACHE)
 
         return cfg
 
@@ -164,35 +163,10 @@ class App(app.App):
         super().stop()
 
 
-# 用于挂住系统进程的钩子
-BOOT = 'boot'
-STARTED = 'sarted'
-STOPPED = 'stopped'
-
-# 全局钩子
-_hooks = {}
-
-
-def Hook(step, proc):
-    if step not in _hooks:
-        arr = []
-        _hooks[step] = arr
-    else:
-        arr = _hooks[step]
-    arr.append(proc)
-
-
-def RunHooks(step):
-    if step in _hooks:
-        arr = _hooks[step]
-        for e in arr:
-            e()
-
-
 # 处理entry的url转换
 url.RegisterScheme("entry",
                    lambda body:
-                   App.shared.entryDir + body
+                   App.shared().entryDir + body
                    )
 
 # 处理clientSDK的url转换

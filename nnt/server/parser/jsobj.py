@@ -192,4 +192,5 @@ class Jsobj(AbstractParser):
                 continue
             if output and not fp.output:
                 continue
-            mdl[key] = self.decodeField(fp, params[key], input, output)
+            dv = self.decodeField(fp, params[key], input, output)
+            setattr(mdl, key, dv)

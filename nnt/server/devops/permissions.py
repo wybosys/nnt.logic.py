@@ -1,11 +1,9 @@
-from ...store import KvRedis
-from ...core.kernel import *
-from ...core import logger
-from ...manager import config, app
-import netaddr
-import json
-import os
 import asyncio.futures as futures
+import os
+
+from ...core.kernel import *
+from ...manager import config, hook
+from ...store import KvRedis
 
 
 class _Permissions:
@@ -45,7 +43,7 @@ class _Permissions:
 
         def _(res):
             fur.set_result(toJsonObject(res))
-            fur.done()
+
         self._db.getraw(permid, _)
 
     def allowClient(self, clientip):
@@ -61,7 +59,7 @@ def _():
         Permissions = _Permissions()
 
 
-# app.Hook(app.STARTED, _)
+hook.Hook(hook.STARTED, _)
 
 KEY_PERMISSIONID = "_permissionid"
 KEY_SKIPPERMISSION = "_skippermission"

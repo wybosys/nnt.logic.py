@@ -20,6 +20,8 @@ class Echoo:
 
     def __init__(self):
         self.enm = EchoType.TEST
+        self.map = {}
+        self.array = []
 
 
 @cp.model()

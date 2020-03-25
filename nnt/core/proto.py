@@ -207,7 +207,7 @@ def filter(id, opts=None, comt=None, valid=None):
 
 def GetModelInfo(clz) -> ModelOption:
     if hasattr(clz, MP_KEY):
-        return clz[MP_KEY]
+        return getattr(clz, MP_KEY)
     return None
 
 
