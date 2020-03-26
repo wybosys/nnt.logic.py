@@ -109,6 +109,10 @@ class App(app.App):
         if 'deskey' in c:
             config.DES_KEY = c['deskey']
 
+        # 增加自定义模块加载目录
+        for e in at(c, 'libs', []):
+            sys.path.append(url.expand(e))
+
         # 读取devops的配置
         if devcfg:
             cfg = json.load(open(devcfg, 'r'))

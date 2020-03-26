@@ -1,7 +1,12 @@
 import asyncio
 import json
+import uuid as muuid
 
 from . import logger
+
+
+def uuid() -> str:
+    return muuid.uuid1().hex
 
 
 def toJson(o, default=None):
@@ -22,7 +27,8 @@ def toJsonObject(o, default=None):
         try:
             r = json.loads(o)
         except Exception as err:
-            logger.warn(o + " " + err)
+            logger.warn(o)
+            logger.error(err)
             r = default
         return r
     elif t == dict or t == list:

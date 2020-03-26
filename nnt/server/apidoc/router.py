@@ -104,12 +104,15 @@ class Router(r.IRouter):
         # 获得router身上的action信息以及属性列表
         asnms = r.GetAllActionNames(router.__class__)
         acts = []
+        if not asnms:
+            return acts
+
         for asnm in asnms:
             ap = r.FindAction(router.__class__, asnm)
             t = {
                 'name': '%s.%s' % (name, asnm),
                 'action': '%s.%s' % (name, asnm),
-                'comment': ap.comment,
+                'comment': ap.comment if ap.comment else '',
                 'params': Router.ParametersInfo(ap.clazz)
             }
             acts.append(t)
@@ -119,8 +122,14 @@ class Router(r.IRouter):
     def ParametersInfo(clz):
         ps = []
         infos = cp.GetAllFields(clz)
+        ids = []
         for nm in infos:
             info: cp.FieldOption = infos[nm]
+            idx = info.id
+            if idx in ids:
+                idx += pow(10, ids.count(idx))
+            ids.append(info.id)
+
             t = {
                 'name': nm,
                 'array': info.array,
@@ -135,10 +144,10 @@ class Router(r.IRouter):
                 'map': info.map,
                 'object': info.json,
                 'optional': info.optional,
-                'index': info.id,
+                'index': idx,
                 'input': info.input,
                 'output': info.output,
-                'comment': info.comment,
+                'comment': info.comment if info.comment else '',
                 'valtyp': obj_get_classname(info.valtype),
                 'keytyp': obj_get_classname(info.keytype)
             }
@@ -220,7 +229,6 @@ class Router(r.IRouter):
                         if not fp.input and not fp.output:
                             continue
                         typ = cp.FpToTypeDef(fp)
-                        deco = None
                         if m.php:
                             deco = cp.FpToDecoDefPHP(fp)
                         else:

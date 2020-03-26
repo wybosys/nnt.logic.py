@@ -18,6 +18,16 @@ def at(any, idx, default=None):
             return default
 
 
+def isin(any, idx, default=False) -> bool:
+    try:
+        return idx in any
+    except:
+        try:
+            return hasattr(any, idx)
+        except:
+            return default
+
+
 def ats(any, subs: list, default=None):
     if not subs:
         return any

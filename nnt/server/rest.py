@@ -402,7 +402,10 @@ class HttpServer:
         except Exception as err:
             logger.exception(err)
             t.status = STATUS.EXCEPTION
-            await t.submit()
+            t.submit()
+
+        # 清理事物
+        t.clear()
 
     def submit(self, t: Transaction, opt: TransactionSubmitOption = None):
         pl: TransactionPayload = t.payload

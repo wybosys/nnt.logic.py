@@ -1,7 +1,7 @@
-import inspect
-
 from .kernel import *
 from .python import *
+from ..core import inspect
+from ..store.filter import Filter
 
 # 定义标记
 
@@ -219,17 +219,39 @@ def IsModel(clz) -> bool:
     return GetModelInfo(clz) != None
 
 
-def IsNeedAuth(mdl) -> bool:
+def IsNeedAuth(clz) -> bool:
     """ 是否需要登陆验证 """
-    mp = GetModelInfo(mdl.__class__)
-    return mp.auth
+    mp = GetModelInfo(clz)
+    return mp.auth if mp else False
+
+
+def _IsFieldOption(v) -> bool:
+    typ = type(v)
+    if typ == list or typ == tuple:
+        for e in v:
+            if isinstance(e, FieldOption):
+                return True
+    else:
+        return isinstance(v, FieldOption)
+
+
+def _GetFieldOption(v) -> FieldOption:
+    typ = type(v)
+    if typ == list or typ == tuple:
+        for e in v:
+            if isinstance(e, FieldOption):
+                return e
+    elif isinstance(v, FieldOption):
+        return v
+    return None
 
 
 def GetAllFields(clazz) -> [str, FieldOption]:
     fs = {}
-    for e in inspect.getmembers(clazz):
+    for e in inspect.getmemberfields(clazz):
         nm, obj = e
-        if isinstance(obj, FieldOption):
+        obj = _GetFieldOption(obj)
+        if obj:
             fs[nm] = obj
     return fs
 
@@ -238,9 +260,9 @@ def IsParentField(clazz, fp: FieldOption) -> bool:
     for each in clazz.__bases__:
         if each == object:
             continue
-        for e in inspect.getmembers(each):
-            nm, obj = e
-            if obj == fp:
+        for e in inspect.getmemberfields(each):
+            _, obj = e
+            if _GetFieldOption(obj) == fp:
                 return True
         if IsParentField(each, fp):
             return True
@@ -251,7 +273,7 @@ def GetAllOwnFields(clazz) -> [str, FieldOption]:
     fs = {}
     for e in inspect.getmembers(clazz):
         nm, obj = e
-        if not isinstance(obj, FieldOption):
+        if not _IsFieldOption(obj):
             continue
         if IsParentField(clazz, obj):
             continue
@@ -412,8 +434,7 @@ def DecodeValue(fp: FieldOption, val, input=True, output=False) -> object:
         elif fp.json:
             return toJsonObject(val)
         elif fp.filter:
-            pass
-            # return Filter.Parse(val)
+            return Filter.Parse(val)
         elif fp.intfloat:
             return IntFloat.From(toInt(val), fp.intfloat)
         else:

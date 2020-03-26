@@ -31,9 +31,13 @@ class SeqPaged:
 
     def __init__(self):
         super().__init__()
+        self.clear()
+
+    def clear(self):
         self.last = -1
         self.limit = 10
         self.total = 0
+        self.items = []
 
     @property
     def skips(self) -> int:
@@ -50,15 +54,21 @@ class NumPaged:
 
     def __init__(self):
         super().__init__()
+        self.clear()
+
+    def clear(self):
         self.page = 0
         self.limit = 10
         self.total = 0
+        self.items = []
 
+    @property
     def skips(self) -> int:
         return self.page * self.limit
 
 
 PAGED_LIMIT = 5000
+ROWS_LIMIT = 100
 
 
 class ModelError(Exception):
@@ -68,9 +78,6 @@ class ModelError(Exception):
         self.code = code
         self.msg = msg
         self.__traceback__ = sys.gettrace()
-
-
-PAGED_LIMIT = 5000
 
 
 @cp.model([cp.enum])

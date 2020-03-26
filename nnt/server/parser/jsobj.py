@@ -3,6 +3,7 @@ from ...core import proto as cp
 from ...core.kernel import *
 from ...core.models import STATUS
 from ...core.python import *
+from ...store.filter import Filter
 
 
 class Jsobj(AbstractParser):
@@ -183,7 +184,7 @@ class Jsobj(AbstractParser):
                 return val
 
     def fill(self, mdl, params, input: bool, output: bool):
-        fps = cp.GetAllFields(mdl)
+        fps = cp.GetAllFields(mdl.__class__)
         # python默认定义field会导致mdl身上的fp对应的字段不为nil，所以需要清空以便除param之外其他都为nil
         for k in fps:
             v = getattr(mdl, k)

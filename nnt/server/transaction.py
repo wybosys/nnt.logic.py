@@ -3,7 +3,9 @@ from ..core.models import *
 from ..core.proto import IsNeedAuth
 from ..core.python import *
 from ..core.router import FindAction
-from ..manager import config
+from ..manager import config, dbmss
+from ..store.proto import GetStoreInfo
+from ..store.session import AbstractSession
 
 RESPONSE_SID = "X-NntLogic-SessionId"
 
@@ -146,8 +148,16 @@ class Transaction:
         self.implOutput = None
         self._outputed = False
 
+        # 已经打开的数据库连接，trans结束时自动关闭
+        self._dbs = []
+
         # 默认启动超时处理
         self._waitTimeout()
+
+    def clear(self):
+        for t in self._dbs:
+            t.close()
+        self._dbs.clear()
 
     def sessionId(self):
         """返回事务用来区分客户端的id，通常业务中实现为sid"""
@@ -209,7 +219,7 @@ class Transaction:
 
     def needAuth(self) -> bool:
         """ 此次请求需要验证 """
-        return IsNeedAuth(self.model)
+        return IsNeedAuth(self.model.__class__)
 
     def auth(self) -> bool:
         """ 是否已经授权 """
@@ -268,6 +278,21 @@ class Transaction:
         self._timeout = None
         self.status = STATUS.TIMEOUT
         self.submit()
+
+    def db(self, dbid: str) -> AbstractSession:
+        if type(dbid) == type:
+            ti = GetStoreInfo(dbid)
+            if not ti:
+                raise TypeError('不是数据库模型 %s' % dbid.__name__)
+            dbid = ti.id
+        db = dbmss.Find(dbid)
+        if not db:
+            raise TypeError('没有找到数据库 %s' % dbid)
+        ses = db.session()
+        if not ses:
+            raise TypeError('创建数据session失败 %s' % dbid)
+        self._dbs.append(ses)
+        return ses
 
 
 class EmptyTransaction(Transaction):
