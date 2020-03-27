@@ -250,7 +250,7 @@
                       return;
                   }
                   var ct = hdl.getResponseHeader("content-type");
-                  if (ct != "application/json") {
+                  if (ct.indexOf("application/json") == -1) {
                       cb(new Error(hdl.responseText));
                       return;
                   }

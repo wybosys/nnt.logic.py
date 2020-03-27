@@ -1,9 +1,10 @@
+import tempfile
+
+import leveldb
+
+from .kv import AbstractKv, DbExecuteStat
 from ..core import url, logger
 from ..core.object import Variant, VariantType
-from .kv import AbstractKv, DbExecuteStat
-import leveldb
-import os
-import tempfile
 
 
 class KvLevelNode:
@@ -36,48 +37,48 @@ class KvLevel(AbstractKv):
     def close(self):
         self._db = None
 
-    def get(self, key, cb):
+    async def get(self, key) -> Variant:
         key = key.encode('utf-8')
-        try:
-            d = self._db.Get(key)
-            v = Variant.Unserialize(d)
-            cb(v)
-        except:
-            cb(None)
+        d = self._db.Get(key)
+        v = Variant.Unserialize(d)
+        return v
 
-    def set(self, key, val, cb):
+    async def getraw(self, key) -> object:
+        key = key.encode('utf-8')
+        d = self._db.Get(key)
+        return d
+
+    async def set(self, key, val: Variant):
         key = key.encode('utf-8')
         self._db.Put(key, val.serialize())
-        cb(True)
+        return True
 
-    def getset(self, key, val, cb):
-        def _(d):
-            self.set(val)
-            cb(d)
-        self.get(key, _)
+    async def getset(self, key, val: Variant) -> Variant:
+        p = self.get(key)
+        self.set(val)
+        return p
 
-    def autoinc(self, key, delta, cb):
-        def _(d):
-            if d == None:
-                self.set(key, 0)
-                cb(0)
-            else:
-                v = Variant(d.number + delta)
-                self.set(key, v)
-                cb(v.number)
-        self.get(key, _)
+    async def autoinc(self, key, delta: int) -> int:
+        d = self.get(key)
+        if d is None or d.typ != VariantType.NUMBER:
+            self.set(key, 0)
+            return 0
+        else:
+            v = Variant(d.number + delta)
+            self.set(key, v)
+            return v.number
 
-    def inc(self, key, delta, cb):
-        def _(d):
-            if d == None or d.typ != VariantType.NUMBER:
-                cb(None)
-            else:
-                v = Variant(d.number + delta)
-                self.set(key, v)
-                cb(v.number)
-        self.get(key, _)
+    async def inc(self, key, delta: int) -> int:
+        d = self.get(key)
+        if not d or d.typ != VariantType.NUMBER:
+            self.set(key, 0)
+            return 0
+        else:
+            v = Variant(d.number + delta)
+            self.set(key, v)
+            return v.number
 
-    def delete(self, key, cb):
+    async def delete(self, key) -> DbExecuteStat:
         key = key.encode('utf-8')
         self._db.Delete(key)
-        cb(DbExecuteStat(remove=1))
+        return DbExecuteStat(remove=1)

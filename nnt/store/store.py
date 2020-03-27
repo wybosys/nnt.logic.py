@@ -1,6 +1,3 @@
-from .session import AbstractSession
-
-
 class AbstractDbms:
 
     def __init__(self):
@@ -15,11 +12,11 @@ class AbstractDbms:
         return True
 
     # 创建一个过程
-    def session(self) -> AbstractSession:
+    def session(self) -> 'AbstractSession':
         return None
 
     # 打开连接
-    def open(self): pass
+    async def open(self): pass
 
     # 关闭连接
     def close(self): pass

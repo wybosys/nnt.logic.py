@@ -415,7 +415,7 @@ class HttpServer:
         if t.gzip:
             ct["Content-Encoding"] = "gzip"
         if t.responseSessionId:
-            ct[RESPONSE_SID] = t.sessionId()
+            ct[RESPONSE_SID] = t.responseSessionId
         buf = t.render.render(t, opt)
         if t.gzip:
             pl.rsp.raw = codec.gzip_compress(buf)

@@ -7,8 +7,10 @@ from sqlalchemy.orm import sessionmaker, Session, Query
 
 from nnt.store.rdb import AbstractRdb
 from .filter import Filter
-from .proto import FieldOption, FpIsTypeEqual, GetFieldInfos, GetStoreInfo, Fill, _GetFieldOption, Output
+from .proto import FieldOption, FpIsTypeEqual, GetFieldInfos, Fill, _GetFieldOption, Output, \
+    ClearTableChangeds, GetTableInfo, GetTableChangeds, GetTablePrimary
 from .session import AbstractSession
+from .store import DbExecuteStat
 from ..core import logger
 from ..core.kernel import toInt
 from ..core.models import ROWS_LIMIT
@@ -171,23 +173,30 @@ class MySqlSession(AbstractSession):
         super().__init__()
         self._ses: Session = ses
         self._res: Query = None
-        self._clazz = None
-        self._alcclz = None
-        self._filters = []
-        self._limit = 0
-        self._skips = 0
+        self.reset()
 
     def close(self):
         self._ses.close()
         self._ses = None
 
-    def query(self, clazz) -> 'AbstractSession':
+    def reset(self) -> AbstractSession:
+        self._clazz = None
+        self._alcclz = None
+        self._filters = []
+        self._limit = 0
+        self._skips = 0
+        return self
+
+    def query(self, clazz) -> AbstractSession:
         self._alcclz = ToAlc(clazz)
         self._clazz = clazz
         self._res = self._ses.query(self._alcclz)
         return self
 
-    def filter(self, *args) -> 'AbstractSession':
+    def bind(self, clazz) -> AbstractSession:
+        return self.query(clazz)
+
+    def filter(self, *args) -> AbstractSession:
         argc = len(args)
         if argc == 0:
             pass
@@ -245,7 +254,10 @@ class MySqlSession(AbstractSession):
     def _instance(self, res: dict):
         """从原始数据恢复nnt模型"""
         t = self._clazz()
-        return Fill(t, res)
+        Fill(t, res)
+        # 清除修改状态
+        ClearTableChangeds(t)
+        return t
 
     def _instancealc(self, mdl):
         """从nnt模型恢复alc模型"""
@@ -258,25 +270,34 @@ class MySqlSession(AbstractSession):
     def first(self):
         self._before()
         res = self._res.first()
-        res = self._instance(res)
+        if res:
+            res = self._instance(res)
         self._after()
+        self.reset()
         return res
 
     def one(self):
         self._before()
-        res = self._res.one()
-        res = self._instance(res)
-        self._after()
+        try:
+            res = self._res.one()
+            res = self._instance(res)
+        except:
+            return None
+        finally:
+            self._after()
+            self.reset()
         return res
 
-    def add(self, rcd, commit=True):
-        self._alcclz = ToAlc(rcd.__class__)
-        t = self._instancealc(rcd)
+    def add(self, m, commit=True):
+        self.reset()
+        self._alcclz = ToAlc(m.__class__)
+        t = self._instancealc(m)
         self._ses.add(t)
         if commit:
-            self._ses.commit()
+            self.commit()
             self._ses.refresh(t)
-            Fill(rcd, t)
+            Fill(m, t)
+        return True
 
     def all(self):
         self._before()
@@ -284,11 +305,12 @@ class MySqlSession(AbstractSession):
         if cnt >= ROWS_LIMIT:
             raise OverflowError('将要读取的数量超过系统设定的最大量')
         res = self._res.all()
-        self._after()
         ret = []
         for e in res:
             t = self._instance(e)
             ret.append(t)
+        self._after()
+        self.reset()
         return ret
 
     def limit(self, n):
@@ -296,7 +318,7 @@ class MySqlSession(AbstractSession):
         return self
 
     def commit(self):
-        self._res.commit()
+        self._ses.commit()
 
     def count(self) -> int:
         return self._res.count()
@@ -305,6 +327,63 @@ class MySqlSession(AbstractSession):
         self._skips = n
         return self
 
+    def update(self, m, commit=True) -> bool:
+        cds = GetTableChangeds(m)
+        if not len(cds):
+            return True
+        self.reset().bind(m.__class__)
+
+        # filter主键
+        prm = GetTablePrimary(m.__class__)
+        if prm:
+            k = getattr(self._alcclz, prm.name)
+            v = getattr(m, prm.name)
+            self._res = self._res.filter(k == v)
+        else:
+            raise TypeError("不允许更新没有主键的模型 %s" % m.__name__)
+
+        # 更新
+        sta = {}
+        for e in cds:
+            k = getattr(self._alcclz, e)
+            v = getattr(m, e)
+            sta[k] = v
+        self._res.update(sta, synchronize_session=False)
+
+        ClearTableChangeds(m)
+        if commit:
+            self.commit()
+
+        return True
+
+    def delete(self, m=None, commit=True) -> DbExecuteStat:
+        self._before()
+        cnt = self._res.count()
+        if cnt == 0:
+            self._after()
+            return DbExecuteStat(remove=0)
+
+        if m is None:
+            self._res.delete()
+            if commit:
+                self.commit()
+            self._after()
+            return DbExecuteStat(remove=cnt)
+
+        # 构造alc对象，进行删除
+        t = self._instancealc(m)
+        try:
+            self._ses.delete(t)
+            if commit:
+                self.commit()
+        except Exception as err:
+            raise err
+        finally:
+            self._after()
+
+        self._after()
+        return DbExecuteStat(remove=cnt)
+
 
 alc_metadata = alc.MetaData()
 _alc_cache = {}
@@ -312,7 +391,7 @@ _alc_cache = {}
 
 def ToAlc(clazz) -> type:
     """ 需要从nn定义的table结构转换成alc的结构 """
-    ti = GetStoreInfo(clazz)
+    ti = GetTableInfo(clazz)
     if not ti:
         return None
 

@@ -4,7 +4,7 @@ from ..core.proto import IsNeedAuth
 from ..core.python import *
 from ..core.router import FindAction
 from ..manager import config, dbmss
-from ..store.proto import GetStoreInfo
+from ..store.proto import GetTableInfo
 from ..store.session import AbstractSession
 
 RESPONSE_SID = "X-NntLogic-SessionId"
@@ -280,10 +280,12 @@ class Transaction:
         self.submit()
 
     def db(self, dbid: str) -> AbstractSession:
+        tbclz = None
         if type(dbid) == type:
-            ti = GetStoreInfo(dbid)
+            ti = GetTableInfo(dbid)
             if not ti:
                 raise TypeError('不是数据库模型 %s' % dbid.__name__)
+            tbclz = dbid
             dbid = ti.id
         db = dbmss.Find(dbid)
         if not db:
@@ -291,6 +293,8 @@ class Transaction:
         ses = db.session()
         if not ses:
             raise TypeError('创建数据session失败 %s' % dbid)
+        if tbclz:
+            ses.bind(tbclz)
         self._dbs.append(ses)
         return ses
 

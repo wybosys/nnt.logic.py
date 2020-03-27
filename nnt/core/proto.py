@@ -10,11 +10,13 @@ output = 1
 optional = 2
 hidden = 3
 auth = 4
-enum = 5
-constant = 6
-required = 7
+nonauth = 5
+enum = 6
+constant = 7
+required = 8
 
 # 定义类型
+object_t = 'object'
 string_t = 'string'
 integer_t = 'integer'
 double_t = 'double'
@@ -94,6 +96,9 @@ def model(options=None, parent=None):
         mp = ModelOption()
         if options:
             mp.auth = auth in options
+            # 默认为不需要验证
+            # if nonauth in options:
+            #    mp.auth = False
             mp.enum = enum in options
             mp.constant = constant in options
             mp.hidden = hidden in options
@@ -273,7 +278,8 @@ def GetAllOwnFields(clazz) -> [str, FieldOption]:
     fs = {}
     for e in inspect.getmembers(clazz):
         nm, obj = e
-        if not _IsFieldOption(obj):
+        obj = _GetFieldOption(obj)
+        if not obj:
             continue
         if IsParentField(clazz, obj):
             continue

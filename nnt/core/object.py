@@ -154,7 +154,7 @@ class Variant(ISerializableObject):
                 self._type = VariantType.NUMBER
                 self._num = obj
                 return True
-            elif typ == string:
+            elif typ == str:
                 self._type = VariantType.STRING
                 self._str = obj
                 return True

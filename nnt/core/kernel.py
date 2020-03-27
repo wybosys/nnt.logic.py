@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import uuid as muuid
 
@@ -6,7 +7,13 @@ from . import logger
 
 
 def uuid() -> str:
-    return muuid.uuid1().hex
+    return muuid.uuid4().hex
+
+
+def md5(str):
+    m = hashlib.md5()
+    m.update(str)
+    return m.hexdigest()
 
 
 def toJson(o, default=None):
@@ -158,7 +165,7 @@ class IntFloat:
     @property
     def value(self):
         """ 缩放后的数据，代表真实值 """
-        return this._value
+        return self._value
 
     @value.setter
     def value(self, v):

@@ -243,51 +243,51 @@ class Router(r.IRouter):
                             'deco': deco
                         })
 
-            # 遍历所有接口，生成接口段
-            for e in ats(self._cfg, ['export', 'router'], []):
-                modu = app.App.shared().requireModule(e)
-                for ec in inspect.getmembers(modu, inspect.isclass):
-                    nm, clz = ec
-                    if type(clz) != type:
-                        continue
-                    ass = r.GetAllActions(clz)
-                    if not ass:
-                        # logger.log('跳过生成接口 %s' % nm)
-                        continue
-                    router = clz()
-                    for name in ass:
-                        ap: r.ActionProto = ass[name]
-                        d = {}
-                        d['name'] = router.action.capitalize() + name.capitalize()
-                        d['action'] = router.action + "." + name
-                        cn = ap.clazz.__name__
-                        if m.vue or m.node:
-                            d['type'] = cn
-                        elif m.php:
-                            d['type'] = 'M' + cn
-                        else:
-                            d['type'] = "models." + cn
-                        d['comment'] = ap.comment
-                        params['routers'].append(d)
+        # 遍历所有接口，生成接口段
+        for e in ats(self._cfg, ['export', 'router'], []):
+            modu = app.App.shared().requireModule(e)
+            for ec in inspect.getmembers(modu, inspect.isclass):
+                nm, clz = ec
+                if type(clz) != type:
+                    continue
+                ass = r.GetAllActions(clz)
+                if not ass:
+                    # logger.log('跳过生成接口 %s' % nm)
+                    continue
+                router = clz()
+                for name in ass:
+                    ap: r.ActionProto = ass[name]
+                    d = {}
+                    d['name'] = router.action.capitalize() + name.capitalize()
+                    d['action'] = router.action + "." + name
+                    cn = ap.clazz.__name__
+                    if m.vue or m.node:
+                        d['type'] = cn
+                    elif m.php:
+                        d['type'] = 'M' + cn
+                    else:
+                        d['type'] = "models." + cn
+                    d['comment'] = ap.comment
+                    params['routers'].append(d)
 
-            # 渲染模板
-            tpl = 'apis.dust'
-            if m.node:
-                tpl = "apis-node.dust"
-            elif m.h5g:
-                tpl = "apis-h5g.dust"
-            elif m.vue:
-                tpl = "apis-vue.dust"
-            elif m.php:
-                tpl = "apis-php.dust"
-            out = TEMPLATES.render(tpl, params)
-            # 需要加上php的头
-            if m.php:
-                out = "<?php\n" + out
-            apifile = params['domain'].replace('/', '-') + '-apis'
-            if m.php:
-                apifile += ".php"
-            else:
-                apifile += ".ts"
-            # 输出到客户端
-            trans.output('text/plain', RespFile.Plain(out).asDownload(apifile))
+        # 渲染模板
+        tpl = 'apis.dust'
+        if m.node:
+            tpl = "apis-node.dust"
+        elif m.h5g:
+            tpl = "apis-h5g.dust"
+        elif m.vue:
+            tpl = "apis-vue.dust"
+        elif m.php:
+            tpl = "apis-php.dust"
+        out = TEMPLATES.render(tpl, params)
+        # 需要加上php的头
+        if m.php:
+            out = "<?php\n" + out
+        apifile = params['domain'].replace('/', '-') + '-apis'
+        if m.php:
+            apifile += ".php"
+        else:
+            apifile += ".ts"
+        # 输出到客户端
+        trans.output('text/plain', RespFile.Plain(out).asDownload(apifile))

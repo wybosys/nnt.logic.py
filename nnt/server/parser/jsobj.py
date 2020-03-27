@@ -179,7 +179,7 @@ class Jsobj(AbstractParser):
                     return val
                 return UploadedFileHandle(val)
             elif fp.filter:
-                return Filter.Parse(val)
+                return Filter.Parse(val, Filter())
             else:
                 return val
 

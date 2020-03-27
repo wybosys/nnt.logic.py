@@ -51,6 +51,28 @@ class TableInfo:
         # 设置
         self.setting: TableSetting = None
 
+        # 更新过的字段列表
+        self.changeds = set()
+
+        # 类自己
+        self.clazz = None
+
+        # 主键
+        self._primary: FieldOption = None
+
+    @property
+    def primary(self):
+        if self._primary:
+            return self._primary()
+        fps = list(GetFieldInfos(self.clazz).values())
+        for fp in fps:
+            if fp.primary:
+                self._primary = fp
+                return self._primary()
+        # 有的数据系统不需要设置主键，为了避免重复查找，通过设置为nil但是返回__call__达到返回真正的None或者主键自身
+        self._primary = Nil
+        return self._primary()
+
 
 class FieldOption:
 
@@ -85,6 +107,9 @@ class FieldOption:
         self.setting: FieldSetting = None  # 字段设置
         self.len: int = None  # 数据长度
 
+    def __call__(self):
+        return self
+
 
 def FpIsTypeEqual(l: FieldOption, r: FieldOption) -> bool:
     return l.string == r.string and \
@@ -101,21 +126,55 @@ def FpIsTypeEqual(l: FieldOption, r: FieldOption) -> bool:
            l.loose == r.loose
 
 
+# 定义getset的hook
+def _hook_setter(self, name, val):
+    # 如果设置的是数据字段，则打上已经修改的标记，便于之后提取更新字段
+    self.__dict__[name] = val
+    if not hasattr(self.__class__, name):
+        # 设置类的普通参数
+        return
+    fp = _GetFieldOption(getattr(self.__class__, name))
+    if not fp:
+        # 同样为普通参数
+        return
+    ti: TableInfo = getattr(self, MP_KEY)
+    ti.changeds.add(name)
+
+
 def table(dbid: str, tbnm: str, setting: TableSetting = None):
     """定义一个数据表模型，注意：数据表模型不能继承"""
 
     def _(clazz):
-        dp = TableInfo()
-        dp.id = dbid
-        dp.table = tbnm
-        dp.setting = setting
-        setattr(clazz, MP_KEY, dp)
+        ti = TableInfo()
+        ti.clazz = clazz
+        ti.id = dbid
+        ti.table = tbnm
+        ti.setting = setting
+        setattr(clazz, MP_KEY, ti)
+        setattr(clazz, '__setattr__', _hook_setter)
         return clazz
 
     return _
 
 
-def GetStoreInfo(clazz) -> TableInfo:
+def GetTablePrimary(clazz) -> FieldOption:
+    ti: TableInfo = getattr(clazz, MP_KEY)
+    return ti.primary
+
+
+def ClearTableChangeds(target):
+    """清除数据模型已修改信息"""
+    ti: TableInfo = getattr(target, MP_KEY)
+    ti.changeds.clear()
+
+
+def GetTableChangeds(target) -> set:
+    ti: TableInfo = getattr(target, MP_KEY)
+    return ti.changeds
+
+
+def GetTableInfo(clazz) -> TableInfo:
+    """获得数据表信息"""
     if hasattr(clazz, MP_KEY):
         return getattr(clazz, MP_KEY)
     return None
@@ -189,6 +248,10 @@ def integer(opts=None, setting=None):
     return fp
 
 
+def timestamp(opts=None, setting=None):
+    return integer(opts, setting)
+
+
 def double(opts=None, setting=None):
     fp = column(opts, setting)
     fp.double = True
@@ -252,7 +315,7 @@ def Fill(mdl, params: dict) -> object:
         val = at(params, key)
         if not val:
             c = getattr(mdl, key)
-            if isinstance(c, FieldOption):
+            if _IsFieldOption(c):
                 setattr(mdl, key, None)
             continue
         if fp.valtype:
@@ -390,8 +453,8 @@ def Output(mdl, default: dict = {}) -> dict:
         if not hasattr(mdl, fk):
             continue
         val = getattr(mdl, fk)
-        if isinstance(val, FieldOption):
-            val = None
+        if _IsFieldOption(val):
+            continue
         if fp.valtype:
             if fp.array:
                 if type(fp.valtype) == str:

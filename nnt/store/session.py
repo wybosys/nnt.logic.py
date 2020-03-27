@@ -1,7 +1,17 @@
+from nnt.store.store import DbExecuteStat
+
+
 class AbstractSession:
 
     def __init__(self):
         pass
+
+    def reset(self) -> 'AbstractSession':
+        return self
+
+    def bind(self, clazz) -> 'AbstractSession':
+        """绑定数据模型"""
+        return self
 
     def close(self):
         pass
@@ -42,3 +52,9 @@ class AbstractSession:
 
     def skip(self, n):
         return self
+
+    def update(self, m, commit=True) -> bool:
+        return False
+
+    def delete(self, m=None, commit=True) -> DbExecuteStat:
+        return DbExecuteStat(remove=0)

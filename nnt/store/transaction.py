@@ -2,7 +2,7 @@
 from nnt.core import logger
 from nnt.manager.dbmss import Find
 from nnt.store.kv import AbstractNosql, AbstractKv
-from nnt.store.proto import GetStoreInfo, GetFieldInfos, Decode
+from nnt.store.proto import GetTableInfo, GetFieldInfos, Decode
 from nnt.store.rdb import AbstractRdb
 
 StorePath = str
@@ -69,7 +69,7 @@ class Transaction(ITransaction):
         return True
 
     def _parseClazz(self, clz) -> bool:
-        ti = GetStoreInfo(clz)
+        ti = GetTableInfo(clz)
         if not ti:
             logger.fatal("%s 不是有效的数据库模型", clz.__name__)
             return False

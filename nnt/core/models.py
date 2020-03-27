@@ -18,7 +18,7 @@ class AuthedNull:
 @cp.model([cp.auth])
 class AuthedObject:
     """登录基本模型"""
-    object = cp.typer(1, object, [cp.output])
+    object = cp.typer(1, cp.object_t, [cp.output])
 
 
 @cp.model()

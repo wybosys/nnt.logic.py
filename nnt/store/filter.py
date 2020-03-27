@@ -79,13 +79,13 @@ class Filter:
         return True
 
     @staticmethod
-    def Parse(str: str) -> 'Filter':
+    def Parse(str: str, default=None) -> 'Filter':
         jsobj = kernel.toJsonObject(str)
         if not jsobj:
-            return None
+            return default
         r = Filter()
         if not r.parse(jsobj):
-            return None
+            return default
         return r
 
     def _attachToJsobj(self, obj: dict):

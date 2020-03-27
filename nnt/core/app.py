@@ -1,9 +1,12 @@
 import importlib
+import os
+import shelve
 import signal
 
 import termcolor
 
 from . import signals as ss, logger
+from .kernel import uuid
 
 kSignalAppStarted = '::nn::app::started'
 kSignalAppStopped = '::nn::app::stopped'
@@ -22,8 +25,20 @@ class App(ss.SObject):
         self.signals.register(kSignalAppStopped)
         App._shared = self
 
+        # 配置文件目录
+        if not os.path.exists('.n2'):
+            os.makedirs('.n2')
+
+        # 配置数据库
+        self._db = shelve.open('.n2/db', writeback=True)
+
+        # 服务唯一id
+        self._uniqueIdentifier = None
+
         def cbstop(sig, frame):
             self.stop()
+            # 强杀
+            quit(-1)
 
         signal.signal(signal.SIGINT, cbstop)
         signal.signal(signal.SIGTERM, cbstop)
@@ -78,3 +93,12 @@ class App(ss.SObject):
         except:
             pass
         return False
+
+    @property
+    def uniqueIdentifier(self) -> str:
+        if self._uniqueIdentifier:
+            return self._uniqueIdentifier
+        if 'uniqueIdentifier' not in self._db:
+            self._db['uniqueIdentifier'] = uuid()
+        self._uniqueIdentifier = self._db['uniqueIdentifier']
+        return self._uniqueIdentifier

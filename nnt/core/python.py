@@ -2,6 +2,13 @@ import os
 
 
 # 扩展python基础函数
+class _Empty:
+
+    def __call__(self):
+        return None
+
+
+Nil = _Empty()
 
 
 def indexOf(lst, v):
@@ -39,6 +46,21 @@ def ats(any, subs: list, default=None):
 
 def atpath(any, path: str, default=None):
     return ats(any, path.split('.'), default)
+
+
+def one(lst, func, default=None):
+    for e in lst:
+        if func(e):
+            return e
+    return default
+
+
+def some(lst, func, default=None):
+    r = []
+    for e in lst:
+        if func(e):
+            r.append(e)
+    return r if len(r) else default
 
 
 def delete(any, idx):
