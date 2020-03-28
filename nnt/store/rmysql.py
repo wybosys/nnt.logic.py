@@ -3,7 +3,7 @@
 import sqlalchemy as alc
 import sqlalchemy.dialects.mysql.types as mysqltypes
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, Query
+from sqlalchemy.orm import sessionmaker, Session, Query, scoped_session
 
 from nnt.store.rdb import AbstractRdb
 from .filter import Filter
@@ -100,7 +100,7 @@ class RMySql(AbstractRdb):
                 cntstr += self.host + ':' + str(self.port) + '/'
             cntstr += self.scheme
             self._hdl = alc.create_engine(cntstr)
-            self._ses = sessionmaker(bind=self._hdl)
+            self._ses = scoped_session(sessionmaker(bind=self._hdl))
             logger.info('启动 mysql@%s' % self.id)
         except Exception as err:
             logger.exception(err)
@@ -112,7 +112,6 @@ class RMySql(AbstractRdb):
         #    self._pool = None
         if self._hdl:
             self._hdl = None
-            self._ses = None
 
     @staticmethod
     def ConvertFpFromMysql(typ: str) -> FieldOption:

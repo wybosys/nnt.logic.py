@@ -94,11 +94,13 @@ class App(ss.SObject):
             pass
         return False
 
-    @property
-    def uniqueIdentifier(self) -> str:
-        if self._uniqueIdentifier:
+    def uniqueIdentifier(self, idr='uniqueIdentifier') -> str:
+        if idr == 'uniqueIdentifier':
+            if not self._uniqueIdentifier:
+                if idr not in self._db:
+                    self._db[idr] = uuid()
+                self._uniqueIdentifier = self._db[idr]
             return self._uniqueIdentifier
-        if 'uniqueIdentifier' not in self._db:
-            self._db['uniqueIdentifier'] = uuid()
-        self._uniqueIdentifier = self._db['uniqueIdentifier']
-        return self._uniqueIdentifier
+        if idr not in self._db:
+            self._db[idr] = uuid()
+        return self._db[idr]

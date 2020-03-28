@@ -78,8 +78,11 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
         if not at(cfg, 'port'):
             return False
         self.listen = None
-        if at(cfg, 'listen') and at(cfg, 'listen') != "*":
-            self.listen = cfg['listen']
+        if at(cfg, 'listen'):
+            if cfg['listen'] == '*':
+                self.listen = '0.0.0.0'
+            else:
+                self.listen = cfg['listen']
         else:
             self.listen = '127.0.0.1'
         self.port = cfg['port']

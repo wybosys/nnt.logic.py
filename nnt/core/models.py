@@ -80,6 +80,11 @@ class ModelError(Exception):
         self.__traceback__ = sys.gettrace()
 
 
+class BreakError(Exception):
+    """用于中断局部代码的异常"""
+    pass
+
+
 @cp.model([cp.enum])
 class STATUS:
     """ 定义内部的错误码, <0的代表系统级错误，>0代表成功，但是需要额外处理，=0代表完全成功"""
