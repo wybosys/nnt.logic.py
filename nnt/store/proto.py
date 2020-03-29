@@ -458,12 +458,12 @@ def Output(mdl, default: dict = {}) -> dict:
         if fp.valtype:
             if fp.array:
                 if type(fp.valtype) == str:
-                    r[fk] = val;
+                    r[fk] = val
                 else:
                     arr = []
                     if val:
                         for e in val:
-                            arr.append(Output(e))
+                            arr.append(Output(e, None))
                     r[fk] = arr
             elif fp.map:
                 m = {}
@@ -478,19 +478,19 @@ def Output(mdl, default: dict = {}) -> dict:
             else:
                 v = Output(val, None)
                 if v is None:
-                    v = toObject(val)
-                r[fk] = v;
+                    v = toObject(val, None)
+                r[fk] = v
         elif fp.intfloat:
             r[fk] = IntFloat.From(val, fp.intfloat).origin
         elif fp.string:
-            r[fk] = toString(val)
+            r[fk] = toString(val, None)
         elif fp.number:
-            r[fk] = toNumber(val);
+            r[fk] = toNumber(val, None)
         elif fp.integer:
             if not fp.autoinc:
-                r[fk] = toInt(val)
+                r[fk] = toInt(val, None)
         elif fp.double:
-            r[fk] = toDouble(val)
+            r[fk] = toDouble(val, None)
         else:
             r[fk] = val
     return r

@@ -268,24 +268,28 @@ class MySqlSession(AbstractSession):
 
     def first(self):
         self._before()
-        res = self._res.first()
-        if res:
-            res = self._instance(res)
+        ret = None
+        try:
+            res = self._res.first()
+            if res:
+                ret = self._instance(res)
+        except Exception as err:
+            logger.error(err)
         self._after()
         self.reset()
-        return res
+        return ret
 
     def one(self):
         self._before()
+        ret = None
         try:
             res = self._res.one()
-            res = self._instance(res)
-        except:
-            return None
-        finally:
-            self._after()
-            self.reset()
-        return res
+            ret = self._instance(res)
+        except Exception as err:
+            logger.error(err)
+        self._after()
+        self.reset()
+        return ret
 
     def add(self, m, commit=True):
         self.reset()
@@ -299,15 +303,18 @@ class MySqlSession(AbstractSession):
         return True
 
     def all(self):
-        self._before()
-        cnt = self._res.count()
-        if cnt >= ROWS_LIMIT:
-            raise OverflowError('将要读取的数量超过系统设定的最大量')
-        res = self._res.all()
         ret = []
-        for e in res:
-            t = self._instance(e)
-            ret.append(t)
+        self._before()
+        try:
+            cnt = self._res.count()
+            if cnt >= ROWS_LIMIT:
+                logger.fatal('将要读取的数量超过系统设定的最大量')
+            res = self._res.all()
+            for e in res:
+                t = self._instance(e)
+                ret.append(t)
+        except Exception as err:
+            logger.error(err)
         self._after()
         self.reset()
         return ret

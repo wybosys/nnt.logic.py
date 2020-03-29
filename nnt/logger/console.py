@@ -23,7 +23,7 @@ class Console(AbstractLogger):
         termcolor.cprint(msg, 'red')
 
     def error(self, err: Exception, status=None):
-        if not isinstance(err, BreakError):
+        if not isinstance(err, BreakError) and config.DEBUG:
             tb = err.__traceback__
             print(''.join(traceback.format_tb(tb)))
         termcolor.cprint(err, 'red')

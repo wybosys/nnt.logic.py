@@ -72,6 +72,7 @@ ROWS_LIMIT = 100
 
 
 class ModelError(Exception):
+    """模型错误"""
 
     def __init__(self, code=0, msg=None):
         super().__init__()
