@@ -9,6 +9,10 @@ from ..core.python import *
 
 class Statics(AbstractServer):
 
+    def __init__(self):
+        super().__init__()
+        self._hdl: multiprocessing.Process = None
+
     def config(self, cfg):
         if not super().config(cfg):
             return False
@@ -39,5 +43,9 @@ class Statics(AbstractServer):
         app.run(host=self.listen, port=self.port)
 
     def stop(self):
-        self._hdl.terminate()
+        try:
+            self._hdl.terminate()
+            self._hdl.close()
+        except Exception as err:
+            logger.error(err)
         self._hdl = None
