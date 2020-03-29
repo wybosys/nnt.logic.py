@@ -1,6 +1,12 @@
 from nnt.store.store import DbExecuteStat
 
 
+class SORT:
+    ASC = 1  # 升序
+    DESC = -1  # 降序
+    NONE = 0  # 不排序
+
+
 class AbstractSession:
 
     def __init__(self):
@@ -23,6 +29,9 @@ class AbstractSession:
         return self
 
     def filter(self, filter) -> 'AbstractSession':
+        return self
+
+    def sort(self, key, val: SORT = SORT.ASC) -> 'AbstractSession':
         return self
 
     def one(self):

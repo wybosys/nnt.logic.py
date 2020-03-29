@@ -9,7 +9,7 @@ from nnt.store.rdb import AbstractRdb
 from .filter import Filter
 from .proto import FieldOption, FpIsTypeEqual, GetFieldInfos, Fill, _GetFieldOption, Output, \
     ClearTableChangeds, GetTableInfo, GetTableChangeds, GetTablePrimary
-from .session import AbstractSession
+from .session import AbstractSession, SORT
 from .store import DbExecuteStat
 from ..core import logger
 from ..core.kernel import toInt
@@ -361,6 +361,21 @@ class MySqlSession(AbstractSession):
             self.commit()
 
         return True
+
+    def sort(self, key, val: SORT = SORT.ASC) -> AbstractSession:
+        key = _GetFieldOption(key)
+        if not key:
+            logger.fatal('传入的排序字段不是数据库字段')
+            return self
+        alcfp = at(self._alcclz, key.name)
+        if alcfp:
+            if val == SORT.ASC:
+                self._res = self._res.order_by(alc.asc(alcfp))
+            elif val == SORT.DESC:
+                self._res = self._res.order_by(alc.desc(alcfp))
+        else:
+            logger.fatal('传入的排序字段不是数据库字段')
+        return self
 
     def delete(self, m=None, commit=True) -> DbExecuteStat:
         self._before()
