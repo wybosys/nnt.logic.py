@@ -43,7 +43,7 @@ class Variant(ISerializableObject):
         if typ == bytearray:
             self._type = VariantType.BUFFER
             self._buf = o
-        elif typ == string:
+        elif typ == str:
             self._type = VariantType.STRING
             self._str = o
         elif typ == bool:

@@ -1,5 +1,6 @@
 import inspect
 
+from nnt.core import inspect, refect
 from nnt.core.kernel import toSelf, toInt, toDouble, IntFloat, toObject, toString, toNumber
 from nnt.core.proto import integer_t, double_t
 from nnt.core.python import *
@@ -74,7 +75,7 @@ class TableInfo:
         return self._primary()
 
 
-class FieldOption:
+class FieldOption(refect.memberfield):
 
     def __init__(self):
         super().__init__()
@@ -127,11 +128,10 @@ def FpIsTypeEqual(l: FieldOption, r: FieldOption) -> bool:
 
 
 # 定义getset的hook
-def _hook_setter(self, name, val):
+def __hook_setter__(self, name: str, val):
     # 如果设置的是数据字段，则打上已经修改的标记，便于之后提取更新字段
     self.__dict__[name] = val
-    if not hasattr(self.__class__, name):
-        # 设置类的普通参数
+    if name.startswith('_'):
         return
     fp = _GetFieldOption(getattr(self.__class__, name))
     if not fp:
@@ -151,7 +151,11 @@ def table(dbid: str, tbnm: str, setting: TableSetting = None):
         ti.table = tbnm
         ti.setting = setting
         setattr(clazz, MP_KEY, ti)
-        setattr(clazz, '__setattr__', _hook_setter)
+        old = getattr(clazz, '__new__')
+        if old != refect.__hook_new__:
+            setattr(clazz, '__new__', refect.__hook_new__)
+            setattr(clazz, '__create__', old)
+        setattr(clazz, '__setattr__', __hook_setter__)
         return clazz
 
     return _

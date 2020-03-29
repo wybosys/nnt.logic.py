@@ -1,6 +1,6 @@
+from . import inspect, refect
 from .kernel import *
 from .python import *
-from ..core import inspect
 from ..store.filter import Filter
 
 # 定义标记
@@ -47,7 +47,7 @@ class ModelOption:
         self.parent = None
 
 
-class FieldOption:
+class FieldOption(refect.memberfield):
 
     def __init__(self):
         super().__init__()
@@ -104,6 +104,10 @@ def model(options=None, parent=None):
             mp.hidden = hidden in options
         mp.parent = parent
         setattr(clazz, MP_KEY, mp)
+        old = getattr(clazz, '__new__')
+        if old != refect.__hook_new__:
+            setattr(clazz, '__new__', refect.__hook_new__)
+            setattr(clazz, '__create__', old)
         return clazz
 
     return _
