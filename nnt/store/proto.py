@@ -1,6 +1,4 @@
-import inspect
-
-from nnt.core import inspect, refect
+from nnt.core import reflect
 from nnt.core.kernel import toSelf, toInt, toDouble, IntFloat, toObject, toString, toNumber
 from nnt.core.proto import integer_t, double_t
 from nnt.core.python import *
@@ -75,7 +73,7 @@ class TableInfo:
         return self._primary()
 
 
-class FieldOption(refect.memberfield):
+class FieldOption(reflect.memberfield):
 
     def __init__(self):
         super().__init__()
@@ -152,8 +150,8 @@ def table(dbid: str, tbnm: str, setting: TableSetting = None):
         ti.setting = setting
         setattr(clazz, MP_KEY, ti)
         old = getattr(clazz, '__new__')
-        if old != refect.__hook_new__:
-            setattr(clazz, '__new__', refect.__hook_new__)
+        if old != reflect.__hook_new__:
+            setattr(clazz, '__new__', reflect.__hook_new__)
             setattr(clazz, '__create__', old)
         setattr(clazz, '__setattr__', __hook_setter__)
         return clazz
@@ -207,7 +205,7 @@ def _GetFieldOption(v) -> FieldOption:
 
 def GetFieldInfos(clazz) -> [str, FieldOption]:
     fs = {}
-    for e in inspect.getmembers(clazz):
+    for e in reflect.getmemberfields(clazz):
         nm, obj = e
         obj = _GetFieldOption(obj)
         if obj:
@@ -359,7 +357,7 @@ def Fill(mdl, params: dict) -> object:
                         m[keyconv(ek)] = t
                 setattr(mdl, key, m)
             else:
-                clz = fp.valtype;
+                clz = fp.valtype
                 if clz == object:
                     setattr(mdl, key, val)
                 elif type(val) == dict:
@@ -373,7 +371,7 @@ def Fill(mdl, params: dict) -> object:
             setattr(mdl, key, v)
         else:
             setattr(mdl, key, val)
-    return mdl;
+    return mdl
 
 
 def Decode(mdl, params: dict) -> object:
@@ -428,7 +426,7 @@ def Decode(mdl, params: dict) -> object:
                         m[keyconv(ek)] = t
                 setattr(mdl, key, m)
             else:
-                clz = fp.valtype;
+                clz = fp.valtype
                 if clz == object:
                     setattr(mdl, key, val)
                 elif type(val) == dict:
@@ -442,7 +440,7 @@ def Decode(mdl, params: dict) -> object:
             setattr(mdl, key, v)
         else:
             setattr(mdl, key, val)
-    return mdl;
+    return mdl
 
 
 def Output(mdl, default: dict = {}) -> dict:

@@ -1,4 +1,4 @@
-from . import inspect, refect
+from . import reflect
 from .kernel import *
 from .python import *
 from ..store.filter import Filter
@@ -47,7 +47,7 @@ class ModelOption:
         self.parent = None
 
 
-class FieldOption(refect.memberfield):
+class FieldOption(reflect.memberfield):
 
     def __init__(self):
         super().__init__()
@@ -105,8 +105,8 @@ def model(options=None, parent=None):
         mp.parent = parent
         setattr(clazz, MP_KEY, mp)
         old = getattr(clazz, '__new__')
-        if old != refect.__hook_new__:
-            setattr(clazz, '__new__', refect.__hook_new__)
+        if old != reflect.__hook_new__:
+            setattr(clazz, '__new__', reflect.__hook_new__)
             setattr(clazz, '__create__', old)
         return clazz
 
@@ -257,7 +257,7 @@ def _GetFieldOption(v) -> FieldOption:
 
 def GetAllFields(clazz) -> [str, FieldOption]:
     fs = {}
-    for e in inspect.getmemberfields(clazz):
+    for e in reflect.getmemberfields(clazz):
         nm, obj = e
         obj = _GetFieldOption(obj)
         if obj:
@@ -269,7 +269,7 @@ def IsParentField(clazz, fp: FieldOption) -> bool:
     for each in clazz.__bases__:
         if each == object:
             continue
-        for e in inspect.getmemberfields(each):
+        for e in reflect.getmemberfields(each):
             _, obj = e
             if _GetFieldOption(obj) == fp:
                 return True
@@ -280,7 +280,7 @@ def IsParentField(clazz, fp: FieldOption) -> bool:
 
 def GetAllOwnFields(clazz) -> [str, FieldOption]:
     fs = {}
-    for e in inspect.getmembers(clazz):
+    for e in reflect.getmemberfields(clazz):
         nm, obj = e
         obj = _GetFieldOption(obj)
         if not obj:
