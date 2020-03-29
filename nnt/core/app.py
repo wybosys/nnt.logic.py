@@ -37,8 +37,7 @@ class App(ss.SObject):
 
         def cbstop(sig, frame):
             self.stop()
-            # 强杀
-            quit(-1)
+            quit(0)
 
         signal.signal(signal.SIGINT, cbstop)
         signal.signal(signal.SIGTERM, cbstop)

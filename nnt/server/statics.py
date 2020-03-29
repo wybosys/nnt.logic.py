@@ -1,4 +1,5 @@
 import multiprocessing
+import signal
 
 import flask
 import gevent.pywsgi
@@ -45,10 +46,19 @@ class Statics(AbstractServer):
         svr = gevent.pywsgi.WSGIServer((self.listen, self.port), app)
         svr.serve_forever()
 
-    def stop(self):
-        try:
-            self._hdl.terminate()
-            self._hdl.close()
-        except Exception as err:
-            logger.error(err)
-        self._hdl = None
+        def cbstop(sig, frame):
+            svr.stop()
+            quit(0)
+
+        signal.signal(signal.SIGINT, cbstop)
+        signal.signal(signal.SIGTERM, cbstop)
+        signal.signal(signal.SIGHUP, cbstop)
+
+
+def stop(self):
+    try:
+        self._hdl.terminate()
+        self._hdl.close()
+    except Exception as err:
+        logger.error(err)
+    self._hdl = None
