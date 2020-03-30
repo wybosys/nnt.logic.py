@@ -29,6 +29,7 @@ class Routers:
             return
         self._routers[obj.action] = obj
         # print("注册路由 %s" % obj.action)
+        return obj
 
     def find(self, id):
         return at(self._routers, id)
