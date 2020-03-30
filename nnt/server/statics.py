@@ -2,7 +2,7 @@ import multiprocessing
 import signal
 
 import flask
-import gevent
+from gevent import pywsgi
 
 from nnt.server.server import AbstractServer
 from ..core import url, logger
@@ -48,9 +48,9 @@ class Statics(AbstractServer):
 
     def _dostart(self):
         app = flask.Flask(self.id, static_folder=self.path, static_url_path=self.prefix)
-        app.run(host=self.listen, port=self.port)
+        # app.run(host=self.listen, port=self.port)
 
-        svr = gevent.pywsgi.WSGIServer((self.listen, self.port), app)
+        svr = pywsgi.WSGIServer((self.listen, self.port), app)
         svr.serve_forever()
 
         def cbstop(sig, frame):
