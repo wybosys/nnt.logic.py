@@ -2,7 +2,7 @@ import multiprocessing
 import signal
 
 import flask
-import gevent.pywsgi
+import gevent
 
 from nnt.server.server import AbstractServer
 from ..core import url, logger
@@ -15,10 +15,17 @@ class Statics(AbstractServer):
         super().__init__()
         self._hdl: multiprocessing.Process = None
 
+        # 监听地址
+        self.listen = None
+        self.port = 90
+        self.prefix = ''
+
     def config(self, cfg):
         if not super().config(cfg):
             return False
         if not at(cfg, 'port'):
+            return False
+        if not at(cfg, 'path'):
             return False
         self.listen = None
         if at(cfg, 'listen'):
@@ -29,9 +36,8 @@ class Statics(AbstractServer):
         else:
             self.listen = '127.0.0.1'
         self.port = cfg['port']
-        if 'path' not in cfg:
-            return False
         self.path = url.expand(cfg['path'])
+        self.prefix = at(cfg, 'prefix', self.prefix)
         return True
 
     async def start(self):
@@ -41,13 +47,15 @@ class Statics(AbstractServer):
         logger.info("启动 %s@statics" % self.id)
 
     def _dostart(self):
-        app = flask.Flask(self.id, static_folder=self.path, static_url_path='')
-        # app.run(host=self.listen, port=self.port)
+        app = flask.Flask(self.id, static_folder=self.path, static_url_path=self.prefix)
+        app.run(host=self.listen, port=self.port)
+
         svr = gevent.pywsgi.WSGIServer((self.listen, self.port), app)
         svr.serve_forever()
 
         def cbstop(sig, frame):
             svr.stop()
+            # app.stop()
             quit(0)
 
         signal.signal(signal.SIGINT, cbstop)
