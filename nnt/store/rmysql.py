@@ -334,29 +334,42 @@ class MySqlSession(AbstractSession):
         return self
 
     def update(self, m, commit=True) -> bool:
-        cds = GetTableChangeds(m)
-        if not len(cds):
-            return True
-        self.reset().bind(m.__class__)
-
-        # filter主键
-        prm = GetTablePrimary(m.__class__)
-        if prm:
-            k = getattr(self._alcclz, prm.name)
-            v = getattr(m, prm.name)
-            self._res = self._res.filter(k == v)
-        else:
-            raise TypeError("不允许更新没有主键的模型 %s" % m.__name__)
-
-        # 更新
+        typ = type(m)
         sta = {}
-        for e in cds:
-            k = getattr(self._alcclz, e)
-            v = getattr(m, e)
-            sta[k] = v
-        self._res.update(sta, synchronize_session=False)
 
-        ClearTableChangeds(m)
+        if typ == list or typ == tuple:
+            if not len(m):
+                return True
+            # 更新多行
+            for e in m:
+                fp = _GetFieldOption(e[0])
+                v = e[1]
+                k = getattr(self._alcclz, fp.name)
+                sta[k] = v
+            self._res.update(sta, synchronize_session=False)
+        else:
+            cds = GetTableChangeds(m)
+            if not len(cds):
+                return True
+            self.reset().bind(m.__class__)
+
+            # filter主键
+            prm = GetTablePrimary(m.__class__)
+            if prm:
+                k = getattr(self._alcclz, prm.name)
+                v = getattr(m, prm.name)
+                self._res = self._res.filter(k == v)
+            else:
+                raise TypeError("不允许更新没有主键的模型 %s" % m.__name__)
+
+            # 更新一行
+            for e in cds:
+                k = getattr(self._alcclz, e)
+                v = getattr(m, e)
+                sta[k] = v
+            self._res.update(sta, synchronize_session=False)
+            ClearTableChangeds(m)
+
         if commit:
             self.commit()
 
