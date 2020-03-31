@@ -6,7 +6,7 @@ import flask_compress
 import gevent.pywsgi
 
 from .server import AbstractServer
-from ..core import url, logger
+from ..core import url, logger, kernel
 from ..core.python import *
 
 
@@ -16,26 +16,24 @@ class Statics(AbstractServer):
         super().__init__()
         self._hdl: multiprocessing.Process = None
 
-        self.listen = None
+        self.listen = '127.0.0.1'
         self.port = 80
         self.prefix = ''
 
     def config(self, cfg):
         if not super().config(cfg):
             return False
-        if not at(cfg, 'port'):
-            return False
         if not at(cfg, 'path'):
             return False
-        self.listen = None
-        if at(cfg, 'listen'):
-            if cfg['listen'] == '*':
-                self.listen = '0.0.0.0'
-            else:
-                self.listen = cfg['listen']
-        else:
-            self.listen = '127.0.0.1'
-        self.port = cfg['port']
+
+        if 'listen' in cfg:
+            li = kernel.parse_socket_port_info(cfg['listen'])
+            self.listen = li[0]
+            if li[1]:
+                self.port = li[1]
+        if 'port' in cfg:
+            self.port = cfg['port']
+
         self.path = os.path.abspath(url.expand(cfg['path']))
         self.prefix = at(cfg, 'prefix', self.prefix)
         return True
@@ -70,9 +68,11 @@ class Statics(AbstractServer):
         signal.signal(signal.SIGHUP, cbstop)
 
     def stop(self):
+        if not self._hdl:
+            return
         try:
             self._hdl.terminate()
-            self._hdl.wait()
+            self._hdl.join()
         except Exception as err:
             logger.error(err)
         self._hdl = None

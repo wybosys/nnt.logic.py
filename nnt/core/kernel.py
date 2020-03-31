@@ -215,3 +215,16 @@ class IntFloat:
 
     def __copy__(self):
         return self.clone()
+
+
+def parse_socket_port_info(cfg: str) -> (str, int):
+    if ':' in cfg:
+        p = cfg.partition(':')
+        host = p[0]
+        port = toInt(p[2], None)
+    else:
+        host = cfg
+        port = None
+    if host == '*':
+        host = '0.0.0.0'
+    return (host, port)

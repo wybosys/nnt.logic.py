@@ -11,7 +11,7 @@ from .render import *
 from .routers import *
 from .server import *
 from .transaction import *
-from ..core import app, time, codec
+from ..core import app, time, codec, kernel
 
 
 class RestResponseData:
@@ -75,17 +75,15 @@ class Rest(AbstractServer, IRouterable, IConsoleServer, IApiServer, IHttpServer)
     def config(self, cfg) -> bool:
         if not super().config(cfg):
             return False
-        if not at(cfg, 'port'):
-            return False
-        self.listen = None
-        if at(cfg, 'listen'):
-            if cfg['listen'] == '*':
-                self.listen = '0.0.0.0'
-            else:
-                self.listen = cfg['listen']
-        else:
-            self.listen = '127.0.0.1'
-        self.port = cfg['port']
+
+        if 'listen' in cfg:
+            li = kernel.parse_socket_port_info(cfg['listen'])
+            self.listen = li[0]
+            if li[1]:
+                self.port = li[1]
+        if 'port' in cfg:
+            self.port = cfg['port']
+
         self.imgsrv = at(cfg, 'imgsrv')
         self.mediasrv = at(cfg, 'mediasrv')
         self.https = nonnull1st(False, at(cfg, 'https'), config.HTTPS)
