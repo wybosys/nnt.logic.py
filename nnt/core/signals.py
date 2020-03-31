@@ -1,15 +1,19 @@
 import time
 
+
 class Object:
     def dispose(self):
         pass
+
 
 class RefObject(Object):
     def __init__(self):
         super().__init__()
         self.__ref_cnt = 1
+
     def grab(self):
         self.__ref_cnt += 1
+
     def drop(self):
         self.__ref_cnt -= 1
         if self.__ref_cnt == 0:
@@ -17,46 +21,50 @@ class RefObject(Object):
             return None
         return self
 
-"""用于穿透整个emit流程的对象"""
+
 class Tunnel:
+    """用于穿透整个emit流程的对象"""
+
     def __init__(self):
         super().__init__()
-        """是否请求中断emit过程"""
+        # 是否请求中断emit过程
         self.veto = False
-        """附加数据"""
+        # 附加数据
         self.payload = None
 
-"""插槽对象"""
+
 class Slot:
+    """插槽对象"""
+
     def __init__(self):
         super().__init__()
-        """重定向信号"""
+        # 重定向信号
         self.redirect = None
-        """回调函数"""
+        # 回调函数
         self.cb = None
-        """回调的对象"""
+        # 回调的对象
         self.target = None
-        """激发者"""
+        # 激发者
         self.sender = None
-        """数据"""
+        # 数据
         self.data = None
-        """延迟启动"""
+        # 延迟启动
         self.delay = 0
-        """穿透用的数据"""
+        # 穿透用的数据
         self.tunnel = None
-        """附加数据"""
+        # 附加数据
         self.payload = None
-        """信号源"""
+        # 信号源
         self.signal = None
-        """激发频率限制 (emits per second) """
+        # 激发频率限制 (emits per second)
         self.eps = 0
-        """调用几次自动解绑，默认为 null，不使用概设定"""
+        # 调用几次自动解绑，默认为 null，不使用概设定
         self.count = 0
         self.emitedCount = 0
         # 其他
         self.__epstm = 0
         self.__veto = False
-    
+
     def emit(self, data, tunnel):
         if self.eps:
             now = time.time()
@@ -93,12 +101,13 @@ class Slot:
         if self.tunnel:
             self.tunnel.veto = b
 
+
 class Slots(Object):
     def __init__(self):
         super().__init__()
-        """所有者，会传递到 Slot 的 sender"""
+        # 所有者，会传递到 Slot 的 sender#
         self.owner = None
-        """信号源"""
+        # 信号源#
         self.signal = None
         # 其他
         self.__slots = []
@@ -117,23 +126,23 @@ class Slots(Object):
     def unlock(self):
         self.__blk -= 1
 
-    """是否已经阻塞"""
     @property
     def isblocked(self):
+        """是否已经阻塞"""
         return self.__blk != 0
 
-    """添加一个插槽"""
     def add(self, s):
+        """添加一个插槽"""
         self.__slots.append(s)
 
-    """对所有插槽激发信号
-     @note 返回被移除的插槽的对象
-    """
     def emit(self, data, tunnel):
+        """对所有插槽激发信号
+        @note 返回被移除的插槽的对象
+        """
         r = set()
         if self.isblocked:
             return r
-        
+
         for s in self.__slots.copy():
             if s.count and s.emitedCount >= s.count:
                 continue
@@ -179,6 +188,7 @@ class Slots(Object):
                 return True
         return False
 
+
 class Signals(Object):
     def __init__(self, owner):
         super().__init__()
@@ -190,22 +200,22 @@ class Signals(Object):
     def dispose(self):
         super().dispose()
         self.clear()
-    
-    """清空"""
+
     def clear(self):
-        #反向断开连接
+        """清空"""
+        # 反向断开连接
         for s in self.__invs:
             s.owner.signals.disconnectOfTarget(self.owner, False)
         self.__invs.clear()
 
-        #清空当前连接
+        # 清空当前连接
         for sig in self.__slots:
             s = self.__slots[sig]
             s.clear()
         self.__slots.clear()
 
-    """注册信号"""
     def register(self, sig):
+        """注册信号"""
         if not sig:
             print("不能注册一个空信号")
             return False
@@ -216,23 +226,23 @@ class Signals(Object):
         ss = Slots()
         ss.signal = sig
         ss.owner = self.owner
-        self.__slots[sig] = ss        
+        self.__slots[sig] = ss
         return True
 
-    """信号主体"""
     @property
     def owner(self):
+        """信号主体"""
         return self._owner
 
-    """只连接一次"""
     def once(self, sig, cb, target=None):
+        """只连接一次"""
         r = self.connect(sig, cb, target)
         if r:
             r.count = 1
         return r
 
-    """连接信号插槽"""
     def connect(self, sig, cb, target=None):
+        """连接信号插槽"""
         if sig not in self.__slots:
             print("对象不存在信号 %s" % sig)
             return None
@@ -241,7 +251,7 @@ class Signals(Object):
         s = ss.find_connected_function(cb, target)
         if s:
             return s
-        
+
         s = Slot()
         s.cb = cb
         s.target = target
@@ -250,15 +260,15 @@ class Signals(Object):
         self.__inv_connect(target)
         return s
 
-    """该信号是否存在连接上的插槽"""
     def isConnected(self, sig):
+        """该信号是否存在连接上的插槽"""
         if sig in self.__slots:
             ss = self.__slots[sig]
             return len(ss.__slots) != 0
         return False
 
-    """转发一个信号到另一个对象的信号"""
     def redirect(self, sig1, sig2=None, target=None):
+        """转发一个信号到另一个对象的信号"""
         if sig1 not in self.__slots:
             return None
         ss = self.__slots[sig1]
@@ -274,8 +284,8 @@ class Signals(Object):
         self.__inv_connect(target)
         return s
 
-    """激发信号"""
     def emit(self, sig, data=None, tunnel=None):
+        """激发信号"""
         if sig not in self.__slots:
             print("对象不存在信号 %s" % sig)
             return
@@ -283,12 +293,12 @@ class Signals(Object):
         ss = self.__slots[sig]
         targets = ss.emit(data, tunnel)
         if targets:
-            for tgt in targets:                
+            for tgt in targets:
                 if not self.isConnectedOfTarget(tgt):
                     self.__inv_disconnect(tgt)
 
-    """断开连接"""
     def disconnectOfTarget(self, target, inv=True):
+        """断开连接"""
         if target == None:
             return
 
@@ -323,8 +333,8 @@ class Signals(Object):
                 return True
         return False
 
-    """阻塞一个信号，将不响应激发"""
     def block(self, sig):
+        """阻塞一个信号，将不响应激发"""
         if sig in self.__slots:
             self.__slots[sig].block()
 
@@ -351,6 +361,7 @@ class Signals(Object):
             return
         target.signals.__invs.remove(self)
 
+
 class SObject(RefObject):
     def __init__(self):
         super().__init__()
@@ -363,7 +374,7 @@ class SObject(RefObject):
         return self._signals
 
     def dispose(self):
-         super().dispose()
-         if self._signals:
-             self._signals.dispose()
-             self._signals = None
+        super().dispose()
+        if self._signals:
+            self._signals.dispose()
+            self._signals = None
