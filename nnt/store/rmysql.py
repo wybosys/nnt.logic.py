@@ -2,8 +2,9 @@
 # import mysql.connector
 import sqlalchemy as alc
 import sqlalchemy.dialects.mysql.types as mysqltypes
+from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, Query, scoped_session
+from sqlalchemy.orm import sessionmaker, Session, Query
 
 from nnt.store.rdb import AbstractRdb
 from .filter import Filter
@@ -41,7 +42,7 @@ class RMySql(AbstractRdb):
         # self._pool: mysql.connector.MySQLConnection = None
         # self._poolidr = uuid()
 
-        self._hdl: Session = None
+        self._hdl: Engine = None
 
         # 主机名
         self.host: str = None
@@ -91,7 +92,7 @@ class RMySql(AbstractRdb):
         # }
         try:
             # self._pool = mysql.connector.connect(**dbcfg)
-            cntstr = 'mysql+mysqlconnector://'
+            cntstr = 'mysql://'
             if self.user:
                 cntstr += self.user + ':' + self.pwd + '@'
             if self.sock:
@@ -99,8 +100,8 @@ class RMySql(AbstractRdb):
             else:
                 cntstr += self.host + ':' + str(self.port) + '/'
             cntstr += self.scheme
-            self._hdl = alc.create_engine(cntstr)
-            self._ses = scoped_session(sessionmaker(bind=self._hdl))
+            self._hdl = alc.create_engine(cntstr, pool_recycle=3600)
+            self._ses = sessionmaker(bind=self._hdl)
             logger.info('启动 mysql@%s' % self.id)
         except Exception as err:
             logger.exception(err)
@@ -140,7 +141,9 @@ class RMySql(AbstractRdb):
 
     def session(self) -> 'MySqlSession':
         # cn = self._pool.connect()
-        return MySqlSession(self._ses())
+        cn = self._hdl.connect()
+        return MySqlSession(self._ses(bind=cn))
+        # return MySqlSession(self._ses())
 
 
 class TrState:
@@ -346,7 +349,7 @@ class MySqlSession(AbstractSession):
                 v = e[1]
                 k = getattr(self._alcclz, fp.name)
                 sta[k] = v
-            self._res.update(sta, synchronize_session=False)
+            self._res.update(sta)
         else:
             cds = GetTableChangeds(m)
             if not len(cds):
@@ -367,7 +370,7 @@ class MySqlSession(AbstractSession):
                 k = getattr(self._alcclz, e)
                 v = getattr(m, e)
                 sta[k] = v
-            self._res.update(sta, synchronize_session=False)
+            self._res.update(sta)
             ClearTableChangeds(m)
 
         if commit:

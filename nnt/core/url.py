@@ -39,7 +39,7 @@ def expand(url) -> str:
     elif ps[0] == "":
         ps[0] = ROOT
     else:
-        return os.path.expanduser(url)
+        return url
 
     return "/".join(ps)
 
