@@ -141,9 +141,9 @@ class RMySql(AbstractRdb):
 
     def session(self) -> 'MySqlSession':
         # cn = self._pool.connect()
-        cn = self._hdl.connect()
-        return MySqlSession(self._ses(bind=cn))
-        # return MySqlSession(self._ses())
+        # cn = self._hdl.connect()
+        # return MySqlSession(self._ses(bind=cn))
+        return MySqlSession(self._ses())
 
 
 class TrState:
