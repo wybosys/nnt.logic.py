@@ -15,17 +15,20 @@ class File(AbstractLogger):
         super().__init__()
         # 保存目录
         self.path = config.CACHE + '/logs'
+
         # 最大日志个数
         self.maxfiles = 5
         # 单个日志最大为100M
         self.maxsize = 1024 * 1024 * 100
-        self.name = 'log'
 
-        self.logger = logging.getLogger()
+        self._log = logging.getLogger()
         if config.DEBUG:
-            self.logger.setLevel(level=logging.DEBUG)
+            self._log.setLevel(level=logging.DEBUG)
         else:
-            self.logger.setLevel(level=logging.INFO)
+            self._log.setLevel(level=logging.INFO)
+
+        self._err = logging.getLogger('error')
+        self._err.setLevel(level=logging.INFO)
 
     def config(self, cfg, root=None):
         if not super().config(cfg, root):
@@ -35,34 +38,39 @@ class File(AbstractLogger):
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
-        f = RotatingFileHandler(self.path + '/' + self.name, maxBytes=self.maxsize, backupCount=self.maxfiles)
-        fmt = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fmt = logging.Formatter('%(asctime)s - %(levelname)s: %(message)s')
+
+        f = RotatingFileHandler(self.path + '/log', maxBytes=self.maxsize, backupCount=self.maxfiles)
         f.setFormatter(fmt)
-        self.logger.addHandler(f)
+        self._log.addHandler(f)
+
+        f = RotatingFileHandler(self.path + '/err', maxBytes=self.maxsize, backupCount=self.maxfiles)
+        f.setFormatter(fmt)
+        self._err.addHandler(f)
 
         return True
 
     def log(self, msg, status=None):
         if config.DEVELOP or config.DEBUG:
-            self.logger.log(msg)
+            self._log.info(msg)
 
     def warn(self, msg, status=None):
-        self.logger.warn(msg)
+        self._log.warn(msg)
 
     def info(self, msg, status=None):
-        self.logger.info(msg)
+        self._log.info(msg)
 
     def fatal(self, msg, status=None):
-        self.logger.fatal(msg)
+        self._err.fatal(msg)
 
     def error(self, err: Exception, status=None):
         if not isinstance(err, BreakError) and config.DEBUG:
             tb = err.__traceback__
-            print(''.join(traceback.format_tb(tb)))
-        self.logger.error(err)
+            self._err.error(''.join(traceback.format_tb(tb)))
+        self._err.error(err)
 
     def exception(self, err: Exception, status=None):
         if not isinstance(err, BreakError):
             tb = err.__traceback__
-            print(''.join(traceback.format_tb(tb)))
-        self.logger.exception(err)
+            self._err.exception(''.join(traceback.format_tb(tb)))
+        self._err.exception(err)

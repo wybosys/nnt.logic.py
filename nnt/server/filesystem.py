@@ -55,7 +55,7 @@ class FileSystem(AbstractServer):
 
     async def start(self):
         await super().start()
-        logger.info("启动 %s@rest" % self.id)
+        logger.info("启动 %s@filesystem" % self.id)
         if self.cron:
             for e in self.cron:
                 k = at(e, 'idr')
