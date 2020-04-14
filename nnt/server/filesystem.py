@@ -1,10 +1,11 @@
 import shutil
 import threading
 
-from nnt.core import logger, url, cron
-from nnt.core.python import *
-from nnt.core.time import DateTime
-from nnt.server.server import AbstractServer
+from .server import AbstractServer
+from ..core import logger, url, cron
+from ..core.python import *
+from ..core.time import DateTime
+from ..manager import config
 
 
 class CronTask_Clean(cron.CronTask):
@@ -56,6 +57,8 @@ class FileSystem(AbstractServer):
     async def start(self):
         await super().start()
         logger.info("启动 %s@filesystem" % self.id)
+        if config.LOCAL:
+            logger.log("%s@filesystem 根目录为 %s" % (self.id, self.path))
         if self.cron:
             for e in self.cron:
                 k = at(e, 'idr')
@@ -69,16 +72,20 @@ class FileSystem(AbstractServer):
                 obj['path'] = self.path
                 cron.Add(obj)
 
-    def move(self, src, dst):
+    def move(self, src, dst) -> str:
         dst = self.path + '/' + dst
         try:
             shutil.move(src, dst)
+            return dst
         except Exception as err:
             logger.error(err)
+        return None
 
-    def copy(self, src, dst):
+    def copy(self, src, dst) -> str:
         dst = self.path + '/' + dst
         try:
             shutil.copy(src, dst)
+            return dst
         except Exception as err:
             logger.error(err)
+        return None

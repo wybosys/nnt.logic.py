@@ -8,6 +8,7 @@ import gevent.pywsgi
 from .server import AbstractServer
 from ..core import url, logger, kernel
 from ..core.python import *
+from ..manager import config
 
 
 class Statics(AbstractServer):
@@ -43,6 +44,8 @@ class Statics(AbstractServer):
         self._hdl.start()
         await super().start()
         logger.info("启动 %s@statics" % self.id)
+        if config.LOCAL:
+            logger.log("%s@statics 根目录为 %s" % (self.id, self.path))
 
     def _dostart(self):
         app = flask.Flask(self.id, static_folder=self.path, static_url_path=self.prefix)

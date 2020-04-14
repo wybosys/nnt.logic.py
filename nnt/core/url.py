@@ -1,10 +1,10 @@
-import urllib
+from urllib.parse import unquote
 
 from . import logger
 from .python import *
 
 # 当前运行的目录
-ROOT = os.path.expanduser('/')
+ROOT = os.path.abspath('/')
 HOME = os.getcwd()
 
 
@@ -33,11 +33,12 @@ def expand(url) -> str:
             return None
         return proc(ps[1])
 
-    ps = url.split("/")
+    ps = url.split('/')
     if ps[0] == "~":
         ps[0] = HOME
     elif ps[0] == "":
-        ps[0] = ROOT
+        if ROOT != '/':
+            ps[0] = ROOT  # 主要支持windows
     else:
         return url
 
@@ -49,7 +50,7 @@ def SmartDecodeSessionID(sid):
         return sid
     if indexOf(sid, '%') == -1:
         return sid
-    return urllib.urldecode(sid)
+    return unquote(sid)
 
 
 # 注册普通的url请求
