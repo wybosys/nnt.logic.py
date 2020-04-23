@@ -6,3 +6,5 @@ tmp
 ~*
 run
 cache
+.n2
+__pycache__
