@@ -1,3 +1,5 @@
+import multiprocessing
+
 from twisted.internet import reactor, endpoints
 from twisted.web import proxy, server
 
@@ -49,6 +51,12 @@ class Proxy(AbstractServer):
         return True
 
     async def start(self):
+        self._hdl = multiprocessing.Process(target=self._dostart)
+        self._hdl.start()
+        logger.info("启动 %s@proxy" % self.id)
+        await super().start()
+
+    def _dostart(self):
         home = HomeResource()
         for k in self.proxy:
             v = self.proxy[k]
@@ -69,9 +77,6 @@ class Proxy(AbstractServer):
         s = server.Site(home)
         endpoints.serverFromString(reactor, cfg).listen(s)
         reactor.run()
-
-        logger.info("启动 %s@proxy" % self.id)
-        await super().start()
 
     def stop(self):
         try:

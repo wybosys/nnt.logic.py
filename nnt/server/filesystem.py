@@ -72,7 +72,7 @@ class FileSystem(AbstractServer):
                 obj['path'] = self.path
                 cron.Add(obj)
 
-    def move(self, src, dst) -> str:
+    def move(self, src, dst):
         dst = self.path + '/' + dst
         try:
             shutil.move(src, dst)
@@ -81,7 +81,7 @@ class FileSystem(AbstractServer):
             logger.error(err)
         return None
 
-    def copy(self, src, dst) -> str:
+    def copy(self, src, dst):
         dst = self.path + '/' + dst
         try:
             shutil.copy(src, dst)
