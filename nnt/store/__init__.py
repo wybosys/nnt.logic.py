@@ -1,2 +1,7 @@
+import platform
+
 from .kvredis import KvRedis
-from .kvlevel import KvLevel
+from .kvdbm import KvDbm
+
+if platform.system() != "Windows":
+    from .kvlevel import KvLevel

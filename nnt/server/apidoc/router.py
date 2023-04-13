@@ -6,7 +6,6 @@ from ...core import router as r, url, kernel, devops, app, proto as cp
 
 
 class ParameterInfo:
-
     def __init__(self):
         super().__init__()
 
@@ -32,24 +31,19 @@ class ParameterInfo:
 
 
 class ActionInfo:
-
     def __init__(self):
         super().__init__()
 
         self.name: str = None
         self.action: str = None
         self.comment: str = None
-        self.params: [ParameterInfo] = None
+        self.params: list[ParameterInfo] = None
 
 
 class RouterConfig:
-
     def __init__(self):
         super().__init__()
-        self.export = {
-            'router': None,
-            'model': None
-        }
+        self.export = {"router": None, "model": None}
 
 
 @cp.model()
@@ -66,13 +60,11 @@ TEMPLATES = AshesEnv([DIR_TEMPLATES])
 
 
 class Router(r.IRouter):
-
     def __init__(self):
         super().__init__()
         self._cfg = None
-        self.action = 'api'
-        self._page = get_file_content(
-            url.expand("~/nnt/server/apidoc/apidoc.volt"))
+        self.action = "api"
+        self._page = get_file_content(url.expand("~/nnt/server/apidoc/apidoc.volt"))
 
     @r.action(Null, [r.expose], "文档")
     def doc(self, trans: Transaction):
@@ -81,8 +73,8 @@ class Router(r.IRouter):
             # 收集routers的信息
             infos = self.ActionsInfo(srv.routers)
             # 渲染页面
-            cnt = self._page.replace('{{actions}}', kernel.toJson(infos))
-            trans.output('text/html;charset=utf-8;', cnt)
+            cnt = self._page.replace("{{actions}}", kernel.toJson(infos))
+            trans.output("text/html;charset=utf-8;", cnt)
             return
         trans.submit()
 
@@ -91,14 +83,14 @@ class Router(r.IRouter):
         return True
 
     @staticmethod
-    def ActionsInfo(routers: Routers) -> [ActionInfo]:
-        t: [ActionInfo] = []
+    def ActionsInfo(routers: Routers) -> list[ActionInfo]:
+        t: list[ActionInfo] = []
         for e in routers:
             t.extend(Router.RouterActions(routers[e]))
         return t
 
     @staticmethod
-    def RouterActions(router: r.IRouter) -> [ActionInfo]:
+    def RouterActions(router: r.IRouter) -> list[ActionInfo]:
         name = router.action
 
         # 获得router身上的action信息以及属性列表
@@ -110,10 +102,10 @@ class Router(r.IRouter):
         for asnm in asnms:
             ap = r.FindAction(router.__class__, asnm)
             t = {
-                'name': '%s.%s' % (name, asnm),
-                'action': '%s.%s' % (name, asnm),
-                'comment': ap.comment if ap.comment else '',
-                'params': Router.ParametersInfo(ap.clazz)
+                "name": "%s.%s" % (name, asnm),
+                "action": "%s.%s" % (name, asnm),
+                "comment": ap.comment if ap.comment else "",
+                "params": Router.ParametersInfo(ap.clazz),
             }
             acts.append(t)
         return acts
@@ -131,25 +123,25 @@ class Router(r.IRouter):
             ids.append(info.id)
 
             t = {
-                'name': nm,
-                'array': info.array,
-                'string': info.string,
-                'integer': info.integer,
-                'double': info.double,
-                'number': info.number,
-                'intfloat': info.intfloat,
-                'boolean': info.boolean,
-                'file': info.file,
-                'enum': info.enum,
-                'map': info.map,
-                'object': info.json,
-                'optional': info.optional,
-                'index': idx,
-                'input': info.input,
-                'output': info.output,
-                'comment': info.comment if info.comment else '',
-                'valtyp': obj_get_classname(info.valtype),
-                'keytyp': obj_get_classname(info.keytype)
+                "name": nm,
+                "array": info.array,
+                "string": info.string,
+                "integer": info.integer,
+                "double": info.double,
+                "number": info.number,
+                "intfloat": info.intfloat,
+                "boolean": info.boolean,
+                "file": info.file,
+                "enum": info.enum,
+                "map": info.map,
+                "object": info.json,
+                "optional": info.optional,
+                "index": idx,
+                "input": info.input,
+                "output": info.output,
+                "comment": info.comment if info.comment else "",
+                "valtyp": obj_get_classname(info.valtype),
+                "keytyp": obj_get_classname(info.keytype),
             }
             ps.append(t)
         return ps
@@ -157,29 +149,26 @@ class Router(r.IRouter):
     @r.action(ExportApis, [r.expose], "生成api接口文件")
     def export(self, trans: Transaction):
         m: ExportApis = trans.model
-        if not m.node and \
-                not m.php and \
-                not m.h5g and \
-                not m.vue:
+        if not m.node and not m.php and not m.h5g and not m.vue:
             trans.status = STATUS.PARAMETER_NOT_MATCH
             trans.submit()
             return
 
         # 分析出的所有结构
         params = {
-            'domain': devops.GetDomain(),
-            'namespace': '',
-            'clazzes': [],
-            'enums': [],
-            'consts': [],
-            'routers': []
+            "domain": devops.GetDomain(),
+            "namespace": "",
+            "clazzes": [],
+            "enums": [],
+            "consts": [],
+            "routers": [],
         }
 
         if m.php:
-            sp = params['domain'].split('/')
-            params['namespace'] = sp[0].capitalize() + '\\' + sp[1].capitalize()
+            sp = params["domain"].split("/")
+            params["namespace"] = sp[0].capitalize() + "\\" + sp[1].capitalize()
 
-        for each in ats(self._cfg, ['export', 'model'], []):
+        for each in ats(self._cfg, ["export", "model"], []):
             modu = app.App.shared().requireModule(each)
             for ec in inspect.getmembers(modu, inspect.isclass):
                 name, clz = ec
@@ -191,34 +180,30 @@ class Router(r.IRouter):
                 if mp.hidden:
                     continue
                 if mp.enum:
-                    em = {
-                        'name': name,
-                        'defs': []
-                    }
-                    params['enums'].append(em)
+                    em = {"name": name, "defs": []}
+                    params["enums"].append(em)
                     # 枚举得每一项定义都是静态的，所以可以直接遍历
                     for each in inspect.getmembers(clz):
                         k, v = each
-                        if not k.startswith('_'):
-                            em['defs'].append({
-                                'name': k,
-                                'value': v
-                            })
+                        if not k.startswith("_"):
+                            em["defs"].append({"name": k, "value": v})
                 elif mp.constant:
                     for each in inspect.getmembers(clz):
                         k, v = each
-                        params['consts'].append({
-                            'name': name.capitalize() + "_" + k.capitalize(),
-                            'value': cp.Output(v)
-                        })
+                        params["consts"].append(
+                            {
+                                "name": name.capitalize() + "_" + k.capitalize(),
+                                "value": cp.Output(v),
+                            }
+                        )
                 else:
                     # 判断是否有父类
                     clazz = {
-                        'name': name,
-                        'super': mp.parent.__name__ if mp.parent else "ApiModel",
-                        'fields': []
+                        "name": name,
+                        "super": mp.parent.__name__ if mp.parent else "ApiModel",
+                        "fields": [],
                     }
-                    params['clazzes'].append(clazz)
+                    params["clazzes"].append(clazz)
                     # 构造临时对象来获得fields得信息
                     fps = cp.GetAllOwnFields(clz)
                     for key in fps:
@@ -233,18 +218,20 @@ class Router(r.IRouter):
                             deco = cp.FpToDecoDefPHP(fp)
                         else:
                             deco = cp.FpToDecoDef(fp, "Model.")
-                        clazz['fields'].append({
-                            'name': key,
-                            'type': typ,
-                            'optional': fp.optional,
-                            'file': fp.file,
-                            'enum': fp.enum,
-                            'input': fp.input,
-                            'deco': deco
-                        })
+                        clazz["fields"].append(
+                            {
+                                "name": key,
+                                "type": typ,
+                                "optional": fp.optional,
+                                "file": fp.file,
+                                "enum": fp.enum,
+                                "input": fp.input,
+                                "deco": deco,
+                            }
+                        )
 
         # 遍历所有接口，生成接口段
-        for e in ats(self._cfg, ['export', 'router'], []):
+        for e in ats(self._cfg, ["export", "router"], []):
             modu = app.App.shared().requireModule(e)
             for ec in inspect.getmembers(modu, inspect.isclass):
                 nm, clz = ec
@@ -258,20 +245,20 @@ class Router(r.IRouter):
                 for name in ass:
                     ap: r.ActionProto = ass[name]
                     d = {}
-                    d['name'] = router.action.capitalize() + name.capitalize()
-                    d['action'] = router.action + "." + name
+                    d["name"] = router.action.capitalize() + name.capitalize()
+                    d["action"] = router.action + "." + name
                     cn = ap.clazz.__name__
                     if m.vue or m.node:
-                        d['type'] = cn
+                        d["type"] = cn
                     elif m.php:
-                        d['type'] = 'M' + cn
+                        d["type"] = "M" + cn
                     else:
-                        d['type'] = "models." + cn
-                    d['comment'] = ap.comment
-                    params['routers'].append(d)
+                        d["type"] = "models." + cn
+                    d["comment"] = ap.comment
+                    params["routers"].append(d)
 
         # 渲染模板
-        tpl = 'apis.dust'
+        tpl = "apis.dust"
         if m.node:
             tpl = "apis-node.dust"
         elif m.h5g:
@@ -284,10 +271,10 @@ class Router(r.IRouter):
         # 需要加上php的头
         if m.php:
             out = "<?php\n" + out
-        apifile = params['domain'].replace('/', '-') + '-apis'
+        apifile = params["domain"].replace("/", "-") + "-apis"
         if m.php:
             apifile += ".php"
         else:
             apifile += ".ts"
         # 输出到客户端
-        trans.output('text/plain', RespFile.Plain(out).asDownload(apifile))
+        trans.output("text/plain", RespFile.Plain(out).asDownload(apifile))

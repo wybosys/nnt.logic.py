@@ -17,7 +17,7 @@ class AbstractParser:
         pass
 
 
-_parsers: [str, AbstractParser] = {}
+_parsers: dict[str, AbstractParser] = {}
 
 
 def RegisterParser(name: str, parser: AbstractParser):
@@ -30,4 +30,4 @@ def RegisterParser(name: str, parser: AbstractParser):
 def FindParser(name: str) -> AbstractParser:
     if name in _parsers:
         return _parsers[name]
-    return _parsers['jsobj']
+    return _parsers["jsobj"]

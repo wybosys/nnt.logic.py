@@ -38,7 +38,7 @@
   "dbms": [
     {
       "id": "localdb",
-      "entry": "nnt.store.KvLevel",
+      "entry": "nnt.store.KvDbm",
       "file": "cache://nnt.logic.sample.localdb"
     }
   ],

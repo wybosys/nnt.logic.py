@@ -3,7 +3,6 @@ import magic
 
 
 class Mime:
-
     @staticmethod
     def Type(path: str, default: str = None) -> str:
         r = mimetypes.guess_type(path)[0]
@@ -25,8 +24,7 @@ class Mime:
     @staticmethod
     def TypeOfFile(path: str, default: str = None) -> str:
         try:
-            r = magic.detect_from_filename(str)
-            return r.mime_type
+            return magic.from_file(path, True)
         except:
             pass
         return default
@@ -34,8 +32,7 @@ class Mime:
     @staticmethod
     def TypeOfBuffer(buf: bytearray, default: str = None) -> str:
         try:
-            r = magic.detect_from_content(buf)
-            return r.mime_type
+            return magic.from_buffer(buf, True)
         except:
             pass
         return default

@@ -18,8 +18,8 @@ OPERATORS = ["gt", "gte", "eq", "not", "lt", "lte"]
 class Filter:
 
     def __init__(self):
-        self.ands: ['Filter'] = []
-        self.ors: ['Filter'] = []
+        self.ands: list['Filter'] = []
+        self.ors: list['Filter'] = []
         self.key: str = None
         self.operator: str = None
         self.value: object = None
