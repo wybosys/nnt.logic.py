@@ -1,6 +1,7 @@
 from nnt.server import Rest
-from .router import *
 from .model.trans import Trans
+from .router import *
+
 
 class SampleRest(Rest):
 
@@ -10,4 +11,3 @@ class SampleRest(Rest):
 
     def instanceTransaction(self):
         return Trans()
-        

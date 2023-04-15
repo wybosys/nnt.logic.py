@@ -54,28 +54,28 @@ class KvLevel(AbstractKv):
         return True
 
     async def getset(self, key, val: Variant) -> Variant:
-        p = self.get(key)
-        self.set(val)
+        p = await self.get(key)
+        await self.set(key, val)
         return p
 
     async def autoinc(self, key, delta: int) -> int:
-        d = self.get(key)
+        d = await self.get(key)
         if d is None or d.typ != VariantType.NUMBER:
-            self.set(key, 0)
+            await self.set(key, 0)
             return 0
         else:
             v = Variant(d.number + delta)
-            self.set(key, v)
+            await self.set(key, v)
             return v.number
 
     async def inc(self, key, delta: int) -> int:
-        d = self.get(key)
+        d = await self.get(key)
         if not d or d.typ != VariantType.NUMBER:
-            self.set(key, 0)
+            await self.set(key, 0)
             return 0
         else:
             v = Variant(d.number + delta)
-            self.set(key, v)
+            await self.set(key, v)
             return v.number
 
     async def delete(self, key) -> DbExecuteStat:

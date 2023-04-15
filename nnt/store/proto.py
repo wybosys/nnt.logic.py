@@ -112,17 +112,17 @@ class FieldOption(reflect.memberfield):
 
 def FpIsTypeEqual(l: FieldOption, r: FieldOption) -> bool:
     return l.string == r.string and \
-           l.integer == r.integer and \
-           l.double == r.double and \
-           l.boolean == r.boolean and \
-           l.number == r.number and \
-           l.intfloat == r.intfloat and \
-           l.json == r.json and \
-           l.array == r.array and \
-           l.map == r.map and \
-           l.keytype == r.keytype and \
-           l.valtype == r.valtype and \
-           l.loose == r.loose
+        l.integer == r.integer and \
+        l.double == r.double and \
+        l.boolean == r.boolean and \
+        l.number == r.number and \
+        l.intfloat == r.intfloat and \
+        l.json == r.json and \
+        l.array == r.array and \
+        l.map == r.map and \
+        l.keytype == r.keytype and \
+        l.valtype == r.valtype and \
+        l.loose == r.loose
 
 
 # 定义getset的hook

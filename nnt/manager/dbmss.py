@@ -3,6 +3,7 @@ from ..core import app
 
 _dbs = {}
 
+
 async def Start(cfg):
     if len(cfg):
         for e in cfg:
@@ -12,7 +13,7 @@ async def Start(cfg):
                 print('db没有配置entry节点')
                 continue
 
-            t = app.App.shared().instanceEntry(e['entry'])            
+            t = app.App.shared().instanceEntry(e['entry'])
             if not t:
                 continue
 
@@ -24,12 +25,14 @@ async def Start(cfg):
     else:
         Stop()
 
+
 def Stop():
     global _dbs
     for k in _dbs:
         db = _dbs[k]
         db.close()
     _dbs = {}
+
 
 # 获得指定名称的数据库连接
 def Find(id):

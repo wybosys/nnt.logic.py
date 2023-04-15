@@ -18,12 +18,13 @@ class AppNodes:
         # 容器节点
         self.container = None
 
+
 class DevopsNode:
 
     def __init__(self):
         super().__init__()
 
-        self.client = True # 是否允许客户端访问本服务
-        self.server = True # 是否允许服务端访问本服务
-        self.allow = None # 白名单
-        self.deny = None # 黑名单
+        self.client = True  # 是否允许客户端访问本服务
+        self.server = True  # 是否允许服务端访问本服务
+        self.allow = None  # 白名单
+        self.deny = None  # 黑名单

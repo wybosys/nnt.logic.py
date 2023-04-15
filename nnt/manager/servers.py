@@ -1,8 +1,9 @@
+from asyncio import futures
+
 from ..config import NodeIsEnable
 from ..core import app, logger
 from ..core.models import STATUS
 from ..server.transaction import EmptyTransaction
-from asyncio import futures
 
 _servers = {}
 
@@ -119,5 +120,6 @@ async def Call(srvid: str, action: str, params, ac=None):
     def cb(t):
         f.set_result(t)
         f.done()
+
     ImplCall(srvid, action, params, cb, ac)
     return f

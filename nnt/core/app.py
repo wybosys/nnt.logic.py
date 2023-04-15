@@ -41,7 +41,7 @@ class App(ss.SObject):
 
         signal.signal(signal.SIGINT, cbstop)
         signal.signal(signal.SIGTERM, cbstop)
-        signal.signal(signal.SIGHUP, cbstop)
+        # signal.signal(signal.SIGHUP, cbstop)
 
     async def start(self):
         self.signals.emit(kSignalAppStarted)

@@ -1,10 +1,11 @@
-from .logger import AbstractLogger
-from ..core.time import DateTime
-from ..core.models import STATUS
-from ..core.kernel import toJson
-import redis
-import os
 import socket
+
+import redis
+
+from .logger import AbstractLogger
+from ..core.kernel import toJson
+from ..core.models import STATUS
+from ..core.time import DateTime
 
 SPECIAL = 9
 CUSTOM = 8
@@ -18,11 +19,12 @@ CRITICAL = 1
 EMERGENCE = 0
 EMERGENCY = 0
 
+
 class Log4devops(AbstractLogger):
     """当运行于devops环境中，需要按照统一的规则保存日志"""
 
     def __init__(self):
-        super().__init__()        
+        super().__init__()
 
         # 连接日志数据库
         hdl = redis.Redis(host="logs", port=6379,

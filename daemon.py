@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 
 import os
+
 from app.main import launch
 
 if __name__ == "__main__":

@@ -63,28 +63,35 @@ DES_KEY = "0i923,dfau9o8"
 CACHE = "cache"
 
 # 最大下载文件的大小
-FILESIZE_LIMIT = 10485760 # 10M
+FILESIZE_LIMIT = 10485760  # 10M
+
 
 # 判断是否是开发版
 def IsDebug():
     return DEBUG or DEVELOP or PUBLISH
 
+
 # 是否是正式版
 def IsRelease():
     return DISTRIBUTION
 
+
 def DebugValue(d, r):
     return r if DISTRIBUTION else d
 
+
 # 支持DEVOPS的架构判断
 def IsDevops():
-    return os.getenv('DEVOPS') != None    
+    return os.getenv('DEVOPS') != None
+
 
 def IsDevopsDevelop():
     return os.getenv('DEVOPS') != None and os.getenv('DEVOPS_RELEASE') == None
 
+
 def IsDevopsRelease():
     return os.getenv('DEVOPS_RELEASE') != None
+
 
 def IsLocal():
     return os.getenv('DEVOPS') == None

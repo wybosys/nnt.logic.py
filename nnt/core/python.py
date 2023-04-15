@@ -1,5 +1,7 @@
 import os
 
+from codecs import open
+
 
 # 扩展python基础函数
 class _Empty:
@@ -80,7 +82,7 @@ def nonnull1st(*args):
 def get_file_content(file):
     if not os.path.exists(file):
         return ''
-    return ''.join(open(file).readlines())
+    return ''.join(open(file, 'r', 'utf-8').readlines())
 
 
 def obj_get_classname(obj, default=None) -> str:

@@ -1,6 +1,8 @@
-import re, sys
-from ..manager import config
+import sys
+
 from ..core.python import *
+from ..manager import config
+
 
 class Node:
 
@@ -16,6 +18,7 @@ class Node:
         # 开发模式，如果不配置，则代表任何模式都启用，否则只有命中的模式才启用
         self.enable = None
 
+
 class Attribute:
 
     @staticmethod
@@ -25,6 +28,7 @@ class Attribute:
     @staticmethod
     def FromString(v):
         return v.split(",")
+
 
 def NodeIsEnable(node):
     """判断此Node节点是否可用"""
@@ -64,7 +68,7 @@ def NodeIsEnable(node):
         # 本地运行
         if e == "local":
             return config.LOCAL
-        
+
         if indexOf(sys.argv, '--' + e) != -1:
             return True
     return False

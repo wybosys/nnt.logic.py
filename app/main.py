@@ -1,5 +1,5 @@
-from nnt.manager.app import App
 from nnt.core.kernel import corun
+from nnt.manager.app import App
 
 
 def launch():
